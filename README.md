@@ -28,9 +28,7 @@ You can then access the UI in your browser at [http://localhost:5000/](http://lo
 
 ## Screenshots
 
-![Duplicate Movie Listing](screenshots/listing.png)
-
-![Delete Confirmation](screenshots/confirmation.png)
+![Demo of deleting duplicate movies](screenshots/demo.gif)
 
 
 ## Credits
