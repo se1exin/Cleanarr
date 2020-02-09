@@ -2,7 +2,7 @@
 
 A simple UI to help find and delete duplicate and sample files from your Plex server.
 
-> Note: At this time only Plex Movie Libraries are supported.
+>Note: At this time only Plex Movie Libraries are supported.
 
 ## Run with Docker
 
@@ -24,7 +24,15 @@ docker run \
 
 You can then access the UI in your browser at [http://localhost:5000/](http://localhost:5000/).
 
-> Note: The access port must be set as `5000` (do not change this or things will not work).
+>Note: The access port must be set as `5000` (do not change this or things will not work).
+
+## Screenshots
+
+![Duplicate Movie Listing](screenshots/duplicates.png)
+
+![Delete Confirmation](screenshots/confirmation.png)
+
+
 
 ## Credits
 Thanks to the following projects:

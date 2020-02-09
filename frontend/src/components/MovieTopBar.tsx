@@ -96,6 +96,7 @@ export const MovieTopBar:FunctionComponent<DupeMovieTopBarProps> = (props) => {
         intent="danger"
         confirmLabel="Delete Selected Items"
         onConfirm={onClickConfirmDelete}
+        onCloseComplete={() => setShowDeleteWarning(false)}
       >
         Are you sure you want to delete {numSelected} items?
       </Dialog>
