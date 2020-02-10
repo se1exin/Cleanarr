@@ -81,9 +81,9 @@ yarn install
 
 Run the Frontend development server:
 
->Note: change `BACKEND_URL` to match where your backend is running at - make sure to include the trailing slash!
+>Note: change `REACT_APP_BACKEND_URL` to match where your backend is running at - **make sure to include the trailing slash!**
 ```
-BACKEND_URL="http://localhost:5000/" yarn serve
+REACT_APP_BACKEND_URL="http://localhost:5000/" yarn serve
 ```
 
 The frontend will now be available in your browser at [http:localhost:3000](http:localhost:3000).

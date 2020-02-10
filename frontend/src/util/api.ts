@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5000/";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000/";
 
 const DUPES_URL = `${BACKEND_URL}movies/dupes`;
 const SAMPLES_URL = `${BACKEND_URL}movies/samples`;
