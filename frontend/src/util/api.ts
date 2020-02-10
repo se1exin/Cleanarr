@@ -4,11 +4,11 @@
 
 import axios from 'axios';
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5000/";
 
-const DUPES_URL = `${BACKEND_URL}/movies/dupes`;
-const SAMPLES_URL = `${BACKEND_URL}/movies/samples`;
-const DELETE_MEDIA_URL = `${BACKEND_URL}/delete/media`;
+const DUPES_URL = `${BACKEND_URL}movies/dupes`;
+const SAMPLES_URL = `${BACKEND_URL}movies/samples`;
+const DELETE_MEDIA_URL = `${BACKEND_URL}delete/media`;
 
 export const getDupeMovies = (): Promise<any> => {
   return axios.get(DUPES_URL);

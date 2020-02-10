@@ -5,7 +5,7 @@ WORKDIR /frontend
 COPY ./frontend /frontend
 
 # Tell the JS app to make API calls relative to the browser's URL
-ENV BACKEND_URL = ""
+ENV BACKEND_URL = "/"
 
 RUN yarn install && yarn build
 

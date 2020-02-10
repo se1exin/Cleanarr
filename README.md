@@ -79,9 +79,11 @@ Setup the node environment and dependencies:
 yarn install
 ```
 
-Run the Frontend development server (change `BACKEND_URL` to match where your backend is running at):
+Run the Frontend development server:
+
+>Note: change `BACKEND_URL` to match where your backend is running at - make sure to include the trailing slash!
 ```
-BACKEND_URL="http://localhost:5000" yarn serve
+BACKEND_URL="http://localhost:5000/" yarn serve
 ```
 
 The frontend will now be available in your browser at [http:localhost:3000](http:localhost:3000).
