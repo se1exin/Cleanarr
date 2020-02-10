@@ -7,6 +7,7 @@ from plex.classes import PlexWrapper
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route("/movies/dupes")
 def get_movies():
     dupes = PlexWrapper().get_dupe_movies()
@@ -36,6 +37,7 @@ def delete_media():
     return jsonify({
         'success': True
     })
+
 
 # Static File Hosting Hack
 # See https://github.com/tiangolo/uwsgi-nginx-flask-docker/blob/master/deprecated-single-page-apps-in-same-container.md

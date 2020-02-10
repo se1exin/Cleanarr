@@ -3,12 +3,12 @@ from plexapi.media import Media, MediaPart, MediaPartStream
 from plexapi.server import PlexServer
 from plexapi.video import Movie, Video
 
-class PlexWrapper(object):
 
+class PlexWrapper(object):
     def __init__(self):
         baseurl = os.environ.get("PLEX_BASE_URL")
         token = os.environ.get("PLEX_TOKEN")
-        self.plex = PlexServer(baseurl, token, timeout=120)
+        self.plex = PlexServer(baseurl, token, timeout=(60 * 60))
 
     def get_dupe_movies(self):
         dupes = []

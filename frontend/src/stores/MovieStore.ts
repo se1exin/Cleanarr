@@ -1,7 +1,7 @@
-import axios from 'axios';
 import {action, computed, observable} from "mobx";
 import React, {Context} from "react";
 import {Movie} from "../types";
+import {getDupeMovies, getSampleMovies} from "../util/api";
 
 export class MovieStore {
   @observable.deep
@@ -23,11 +23,11 @@ export class MovieStore {
     this.movies = movies;
   }
 
-  loadMovies(url: string): void {
+  loadMovies(handlerFn: () => Promise<any>): void {
     this.loading = true;
     this.loadingFailed = false;
     this.setMovies([]);
-    axios.get(url).then(result => {
+    handlerFn().then(result => {
       this.setMovies(result.data);
       this.loading = false;
     }).catch(() => {
@@ -37,13 +37,11 @@ export class MovieStore {
   }
 
   loadDupeMovies(): void {
-    const url = "http://localhost:5000/movies/dupes";
-    this.loadMovies(url);
+    this.loadMovies(getDupeMovies);
   }
 
   loadSampleMovies(): void {
-    const url = "http://localhost:5000/movies/samples";
-    this.loadMovies(url);
+    this.loadMovies(getSampleMovies);
   }
 }
 

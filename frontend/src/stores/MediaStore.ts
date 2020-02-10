@@ -1,8 +1,8 @@
-import axios from "axios";
 import {action, computed, observable} from 'mobx';
 import React, {Context} from "react";
 import {Media} from "../types";
 import {sumMediaSize} from "../util";
+import {deleteMedia} from "../util/api";
 
 export class MediaStore {
   @observable.deep
@@ -25,14 +25,13 @@ export class MediaStore {
 
   deleteMedia(movieKey: string, media: Media): Promise<any> {
     return new Promise((resolve, reject) => {
-      axios.post(`http://localhost:5000/delete/media`, {
-        'movie_key': movieKey,
-        'media_id': media.id
-      })
-      .then(() => {
-        this.removeMedia(media);
-        resolve();
-      });
+      deleteMedia(movieKey, media.id)
+        .then(() => {
+          this.removeMedia(media);
+          resolve();
+        }).catch((error) => {
+          reject(error);
+        });
     })
   }
 
