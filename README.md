@@ -16,6 +16,7 @@ You will need to set the correct parameters for your setup:
 | ----- | --- |
 | `-e PLEX_BASE_URL="plex_address"` | (**required**) Plex Server Address (e.g. http://192.169.1.100:32400) |
 | `-e PLEX_TOKEN="somerandomstring"` | (**required**) A valid Plex token for your Plex Server ([How to find your Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)) |
+| `-e BYPASS_SSL_VERIFY=1` | (**optional**) Disable SSL certificate verification. Use this if your Plex Server has "Secure Connections: Required" and you are having issues connecting to it. (Thanks @booksarestillbetter - #2) |
 | `-p 5000:80` | (**required**) Expose the UI via the selected port (in this case `5000`). Change `5000` to the port of your choosing, but don't change the number `80`. |
 
 
@@ -58,7 +59,7 @@ pip install -r requirements.txt
 
 Run the Backend:
 ```
-FLASK_APP=main python -m flask run
+PLEX_BASE_URL="plex_address" PLEX_TOKEN="somerandomstring" FLASK_APP=main python -m flask run
 ```
 
 The backend will start and run from port `5000` on `localhost` (e.g. [http:localhost:5000](http:localhost:5000)).
