@@ -8,6 +8,13 @@ app = Flask(__name__)
 CORS(app)
 
 
+@app.errorhandler(Exception)
+def internal_error(error):
+    return jsonify({
+        'error': str(error)
+    }), 500
+
+
 @app.route("/movies/dupes")
 def get_movies():
     dupes = PlexWrapper().get_dupe_movies()

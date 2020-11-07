@@ -13,6 +13,9 @@ export class MovieStore {
   @observable
   loadingFailed: boolean = false;
 
+  @observable
+  loadingError: Error|null = null
+
   @computed
   get length(): number {
     return this.movies.length;
@@ -26,13 +29,19 @@ export class MovieStore {
   loadMovies(handlerFn: () => Promise<any>): void {
     this.loading = true;
     this.loadingFailed = false;
+    this.loadingError = null;
     this.setMovies([]);
     handlerFn().then(result => {
       this.setMovies(result.data);
       this.loading = false;
-    }).catch(() => {
+    }).catch((error) => {
+
       this.loading = false;
       this.loadingFailed = true;
+
+      if (error.response?.data?.error) {
+        this.loadingError = new Error(error.response?.data?.error);
+      }
     });
   }
 

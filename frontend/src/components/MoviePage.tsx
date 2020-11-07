@@ -117,6 +117,7 @@ export const MoviePage:FunctionComponent<any> = () => {
         <MovieList
           loading={movieStore.loading}
           loadingFailed={movieStore.loadingFailed}
+          loadingError={movieStore.loadingError}
           listingType={listingType}
           movies={movieStore.movies}
           renderMovieItem={renderMovieItem}

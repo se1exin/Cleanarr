@@ -5,6 +5,7 @@ import {Movie} from "../types";
 type DupeMovieListProps = {
   loading: boolean,
   loadingFailed: boolean,
+  loadingError: Error | null,
   listingType: string,
   movies: Movie[],
   renderMovieItem: (movie: Movie, key: number) => JSX.Element
@@ -14,6 +15,7 @@ export const MovieList:FunctionComponent<DupeMovieListProps> = (props) => {
   const {
     loading,
     loadingFailed,
+    loadingError,
     listingType,
     movies,
     renderMovieItem
@@ -30,10 +32,7 @@ export const MovieList:FunctionComponent<DupeMovieListProps> = (props) => {
       marginY={majorScale(1)}
     >
       { loadingFailed ?
-        <Alert
-          intent="danger"
-          title="Failed to load movies!"
-        >Please check your Plex settings and try again.</Alert>
+        renderErrorAlert()
         :
         <>
           <Spinner size={30} flex={0}/>
@@ -42,6 +41,17 @@ export const MovieList:FunctionComponent<DupeMovieListProps> = (props) => {
       }
     </Pane>
   );
+
+  const renderErrorAlert = () => {
+    return (
+      <Alert
+        intent="danger"
+        title="Failed to load movies!"
+      >
+        {loadingError ? loadingError.message : 'Please check your Plex settings and try again.'}
+      </Alert>
+    )
+  }
 
   const renderEmptyMessage = () => (
     <Pane
