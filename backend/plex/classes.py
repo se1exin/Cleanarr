@@ -11,31 +11,40 @@ class PlexWrapper(object):
         baseurl = os.environ.get("PLEX_BASE_URL")
         token = os.environ.get("PLEX_TOKEN")
         verify_ssl = os.environ.get("BYPASS_SSL_VERIFY", "0") != "1"
+        self.libraries = [
+            x.strip() for x
+            in os.environ.get("LIBRARY_NAMES", "Movies").split(";")
+            if x.strip() != ""
+        ]
 
         session = requests.Session()
         session.verify = verify_ssl
         self.plex = PlexServer(baseurl, token, session=session, timeout=(60 * 60))
 
+    def _get_sections(self):
+        return [self.plex.library.section(title=library) for library in self.libraries]
+
     def get_dupe_movies(self):
         dupes = []
-        section = self.plex.library.section(title="Movies")
-        for movie in section.search(duplicate=True):
-            if len(movie.media) > 1:
-                dupes.append(self.movie_to_dict(movie))
+        for section in self._get_sections():
+            for movie in section.search(duplicate=True):
+                if len(movie.media) > 1:
+                    dupes.append(self.movie_to_dict(movie, section.title))
         return dupes
 
     def get_movie_sample_files(self):
         movies = []
-        section = self.plex.library.section(title="Movies")
-        for movie in section.all():
-            samples = []
-            for media in movie.media:
-                if media.duration is None or media.duration < (5 * 60 * 1000):
-                    samples.append(self.media_to_dict(media))
-            if len(samples) > 0:
-                _movie = self.movie_to_dict(movie)
-                _movie['media'] = samples
-                movies.append(_movie)
+
+        for section in self._get_sections():
+            for movie in section.all():
+                samples = []
+                for media in movie.media:
+                    if media.duration is None or media.duration < (5 * 60 * 1000):
+                        samples.append(self.media_to_dict(media))
+                if len(samples) > 0:
+                    _movie = self.movie_to_dict(movie, section.title)
+                    _movie['media'] = samples
+                    movies.append(_movie)
 
         return movies
 
@@ -60,10 +69,11 @@ class PlexWrapper(object):
         }
 
     @classmethod
-    def movie_to_dict(cls, movie: Movie) -> dict:
+    def movie_to_dict(cls, movie: Movie, library: str) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
         return {
             **cls.video_to_dict(movie),
+            'library': library,
             'duration': movie.duration,
             'guid': movie.guid,
             'originalTitle': movie.originalTitle,

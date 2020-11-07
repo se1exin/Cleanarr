@@ -41,6 +41,9 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
         <Heading>
           { `${movie.title} (${movie.year})` }
         </Heading>
+        <Heading size={100}>
+          { `${movie.library}` }
+        </Heading>
       </Pane>
       <Table>
         <Table.Head>
