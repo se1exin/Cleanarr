@@ -2,7 +2,12 @@
 
 A simple UI to help find and delete duplicate and sample files from your Plex server.
 
->Note: At this time only Plex Movie Libraries are supported.
+> Note: At this time only Plex Movie Libraries are supported.
+
+## Plex Setup
+You need to check `Settings | Library | Allow media deletion` within your plex server’s settings
+
+You will need a Plex Token: [How to find your Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
 ## Run with Docker
 
@@ -21,6 +26,7 @@ You will need to set the correct parameters for your setup:
 | `-p 5000:80` | (**required**) Expose the UI via the selected port (in this case `5000`). Change `5000` to the port of your choosing, but don't change the number `80`. |
 
 
+#### Example running directly with docker
 ```
 docker run \
 	-e PLEX_BASE_URL="http://192.169.1.100:32400" \
@@ -29,6 +35,31 @@ docker run \
 	-p 5000:80 \
 	selexin/plex-library-cleaner:latest
 ```
+
+#### Example using Docker Compose
+(Thanks @JesseWebDotCom - #8)
+
+Note that environment variables should **not** be quoted when using docker-compose.yml format
+
+```
+version: '3'
+
+services:
+
+  plex-library-cleaner:
+    image: selexin/plex-library-cleaner:latest
+    container_name: plex-library-cleaner
+    hostname: plex-library-cleaner
+    ports:
+      - "5000:80"
+    environment:
+      - BYPASS_SSL_VERIFY=1
+      - PLEX_TOKEN=somerandomstring
+      - PLEX_BASE_URL=http://192.169.1.100:32400
+      - LIBRARY_NAMES=Adult Movies;Kid Videos
+    restart: unless-stopped
+```
+
 
 You can then access the UI in your browser at [http://localhost:5000/](http://localhost:5000/).
 

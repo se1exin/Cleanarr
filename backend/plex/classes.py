@@ -29,7 +29,7 @@ class PlexWrapper(object):
         for section in self._get_sections():
             for movie in section.search(duplicate=True):
                 if len(movie.media) > 1:
-                    dupes.append(self.movie_to_dict(movie))
+                    dupes.append(self.movie_to_dict(movie, section.title))
         return dupes
 
     def get_movie_sample_files(self):
@@ -42,7 +42,7 @@ class PlexWrapper(object):
                     if media.duration is None or media.duration < (5 * 60 * 1000):
                         samples.append(self.media_to_dict(media))
                 if len(samples) > 0:
-                    _movie = self.movie_to_dict(movie)
+                    _movie = self.movie_to_dict(movie, section.title)
                     _movie['media'] = samples
                     movies.append(_movie)
 
@@ -69,10 +69,11 @@ class PlexWrapper(object):
         }
 
     @classmethod
-    def movie_to_dict(cls, movie: Movie) -> dict:
+    def movie_to_dict(cls, movie: Movie, library: str) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
         return {
             **cls.video_to_dict(movie),
+            'library': library,
             'duration': movie.duration,
             'guid': movie.guid,
             'originalTitle': movie.originalTitle,

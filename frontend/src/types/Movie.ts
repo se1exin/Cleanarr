@@ -22,5 +22,6 @@ export interface Movie {
   tagline: string,
   userRating: number,
   year: number,
-  media: Media[]
+  media: Media[],
+  library: string
 }
