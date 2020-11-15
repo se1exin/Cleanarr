@@ -2,6 +2,7 @@ import os
 
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
+
 from plex.classes import PlexWrapper
 
 app = Flask(__name__)
@@ -10,9 +11,7 @@ CORS(app)
 
 @app.errorhandler(Exception)
 def internal_error(error):
-    return jsonify({
-        'error': str(error)
-    }), 500
+    return jsonify({"error": str(error)}), 500
 
 
 @app.route("/movies/dupes")
@@ -41,21 +40,19 @@ def delete_media():
             for part in media.parts:
                 print(part.file)
             media.delete()
-    return jsonify({
-        'success': True
-    })
+    return jsonify({"success": True})
 
 
 # Static File Hosting Hack
 # See https://github.com/tiangolo/uwsgi-nginx-flask-docker/blob/master/deprecated-single-page-apps-in-same-container.md
 @app.route("/")
 def main():
-    index_path = os.path.join(app.static_folder, 'index.html')
+    index_path = os.path.join(app.static_folder, "index.html")
     return send_file(index_path)
 
 
 # Everything not declared before (not a Flask route / API endpoint)...
-@app.route('/<path:path>')
+@app.route("/<path:path>")
 def route_frontend(path):
     # ...could be a static file needed by the front end that
     # doesn't use the `static` path (like in `<script src="bundle.js">`)
@@ -64,9 +61,9 @@ def route_frontend(path):
         return send_file(file_path)
     # ...or should be handled by the SPA's "router" in front end
     else:
-        index_path = os.path.join(app.static_folder, 'index.html')
+        index_path = os.path.join(app.static_folder, "index.html")
         return send_file(index_path)
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=80)
