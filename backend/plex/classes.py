@@ -10,7 +10,7 @@ class PlexWrapper(object):
     def __init__(self):
         baseurl = os.environ.get("PLEX_BASE_URL")
         token = os.environ.get("PLEX_TOKEN")
-        maxresults = os.environ.get("MAXRESULTS")
+        self.maxresults = int(os.environ.get("MAXRESULTS"))
         verify_ssl = os.environ.get("BYPASS_SSL_VERIFY", "0") != "1"
         self.libraries = [
             x.strip() for x
