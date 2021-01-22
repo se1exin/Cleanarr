@@ -4,6 +4,8 @@ A simple UI to help find and delete duplicate and sample files from your Plex se
 
 > Note: At this time only Plex Movie Libraries are supported.
 
+> **Important Note: A maximum of 50 results are shown at a time to avoid Plex timeouts**
+
 ## Plex Setup
 You need to check `Settings | Library | Allow media deletion` within your plex server’s settings
 
