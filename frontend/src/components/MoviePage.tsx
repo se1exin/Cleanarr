@@ -111,6 +111,10 @@ export const MoviePage:FunctionComponent<any> = () => {
     }
   };
 
+  const onDeselectAll = () => {
+    mediaStore.reset();
+  };
+
   const renderMovieList = () => (
     <Observer>
       {() => (
@@ -155,6 +159,7 @@ export const MoviePage:FunctionComponent<any> = () => {
             listingOptions={listingTypes}
             listingType={listingType}
             onListingTypeChange={onListingTypeChange}
+            onDeselectAll={onDeselectAll}
           />
         )}
       </Observer>
