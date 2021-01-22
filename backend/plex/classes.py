@@ -10,6 +10,7 @@ class PlexWrapper(object):
     def __init__(self):
         baseurl = os.environ.get("PLEX_BASE_URL")
         token = os.environ.get("PLEX_TOKEN")
+        self.maxresults = int(os.environ.get("MAXRESULTS"))
         verify_ssl = os.environ.get("BYPASS_SSL_VERIFY", "0") != "1"
         self.libraries = [
             x.strip() for x
@@ -27,7 +28,7 @@ class PlexWrapper(object):
     def get_dupe_movies(self):
         dupes = []
         for section in self._get_sections():
-            for movie in section.search(duplicate=True):
+            for movie in section.search(duplicate=True, maxresults=self.maxresults):
                 if len(movie.media) > 1:
                     dupes.append(self.movie_to_dict(movie, section.title))
         return dupes
