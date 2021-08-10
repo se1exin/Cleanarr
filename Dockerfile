@@ -20,5 +20,3 @@ COPY --from=build-stage /frontend/build/static/css /app/static/css
 COPY --from=build-stage /frontend/build/static/js /app/static/js
 
 RUN pip install -r /app/requirements.txt
-
-ENV MAXRESULTS 50
