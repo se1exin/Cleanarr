@@ -13,6 +13,7 @@ type DupeMovieTopBarProps = {
   listingOptions: any[],
   onListingTypeChange: (type: string) => void,
   onDeselectAll: () => void
+  onResetSelection: () => void
   onInvertSelection: () => void
 }
 
@@ -29,6 +30,7 @@ export const MovieTopBar:FunctionComponent<DupeMovieTopBarProps> = (props) => {
     listingOptions,
     onListingTypeChange,
     onDeselectAll,
+    onResetSelection,
     onInvertSelection
   } = props;
 
@@ -74,20 +76,29 @@ export const MovieTopBar:FunctionComponent<DupeMovieTopBarProps> = (props) => {
           </Heading>
         </Pane>
         <Pane display="flex">
-          <Button
-            appearance="default"
-            intent="none"
-            disabled={numSelected === 0}
-            onClick={() => onInvertSelection()}
-          >Invert Selection</Button>
+          { numMovies > 0 && numSelected === 0 ? (
+            <Button
+              appearance="default"
+              intent="none"
+              disabled={numSelected !== 0}
+              onClick={() => onResetSelection()}
+            >Reset Selection</Button>
+          ) : (
+            <Button
+              appearance="default"
+              intent="none"
+              disabled={numSelected === 0}
+              onClick={() => onDeselectAll()}
+            >Deselect All</Button>
+          )}
         </Pane>
         <Pane display="flex">
           <Button
             appearance="default"
             intent="none"
             disabled={numSelected === 0}
-            onClick={() => onDeselectAll()}
-          >Deselect All</Button>
+            onClick={() => onInvertSelection()}
+          >Invert Selection</Button>
         </Pane>
         <Pane display="flex">
           {deleting ?

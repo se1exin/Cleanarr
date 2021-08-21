@@ -1,7 +1,7 @@
 import {majorScale, Pane, toaster} from "evergreen-ui";
 import {autorun} from "mobx";
 import {Observer} from "mobx-react-lite";
-import React, {FunctionComponent, useEffect, useState} from 'react';
+import React, {FunctionComponent, useCallback, useEffect, useState} from 'react';
 import {newMediaStoreContext} from "../stores/MediaStore";
 import {newMovieStoreContext} from "../stores/MovieStore";
 import {Media, Movie} from "../types";
@@ -32,37 +32,6 @@ export const MoviePage:FunctionComponent<any> = () => {
   useEffect(() => {
     onRefresh();
   });
-
-  useEffect(() => {
-    // Determine the default media items to be removed
-    autorun(() => {
-      movieStore.movies.forEach((movie: Movie) => {
-        let _media = [
-          ...movie.media
-        ];
-        let sortedMedia = _media
-          .sort((a, b) => {
-            const aSize = sumMediaSize(a);
-            const bSize = sumMediaSize(b);
-            if (aSize < bSize) return 1;
-            if (aSize > bSize) return -1;
-            return 0;
-          })
-          .sort((a, b) => {
-            if (a.width < b.width) return 1;
-            if (a.width > b.width) return -1;
-            return 0;
-          });
-
-        // Remove the top entry and then select/check (for removal) the rest
-        sortedMedia.forEach(((media, index) => {
-          if (index !== 0) {
-            mediaStore.addMedia(media);
-          }
-        }));
-      });
-    });
-  }, [mediaStore, mediaStore.media, movieStore.movies]);
 
   const onListingTypeChange = (listingType: string): void => {
     setListingType(listingType);
@@ -114,6 +83,42 @@ export const MoviePage:FunctionComponent<any> = () => {
   const onDeselectAll = () => {
     mediaStore.reset();
   };
+
+  const onResetSelection = useCallback(() => {
+    movieStore.movies.forEach((movie: Movie) => {
+      let _media = [
+        ...movie.media
+      ];
+      let sortedMedia = _media
+        .sort((a, b) => {
+          const aSize = sumMediaSize(a);
+          const bSize = sumMediaSize(b);
+          if (aSize < bSize) return 1;
+          if (aSize > bSize) return -1;
+          return 0;
+        })
+        .sort((a, b) => {
+          if (a.width < b.width) return 1;
+          if (a.width > b.width) return -1;
+          return 0;
+        });
+
+      // Remove the top entry and then select/check (for removal) the rest
+      sortedMedia.forEach(((media, index) => {
+        if (index !== 0) {
+          mediaStore.addMedia(media);
+        }
+      }));
+    });
+  }, [mediaStore, movieStore.movies]);
+
+
+  useEffect(() => {
+    // Determine the default media items to be removed
+    autorun(() => {
+      onResetSelection();
+    });
+  }, [onResetSelection]);
 
   const onInvertSelection = () => {
     movieStore.movies.forEach(movie => {
@@ -187,6 +192,7 @@ export const MoviePage:FunctionComponent<any> = () => {
             listingType={listingType}
             onListingTypeChange={onListingTypeChange}
             onDeselectAll={onDeselectAll}
+            onResetSelection={onResetSelection}
             onInvertSelection={onInvertSelection}
           />
         )}
