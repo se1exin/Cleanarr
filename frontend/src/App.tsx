@@ -30,7 +30,7 @@ const App = () => {
       >
         <Pane flex={1}>
           <Heading >
-            Plex Library Cleaner
+            Cleanarr
           </Heading>
         </Pane>
 
