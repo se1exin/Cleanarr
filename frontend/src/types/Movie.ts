@@ -6,7 +6,7 @@ export interface Movie {
   lastViewedAt: string,
   librarySectionID: string,
   summary: string,
-  thumb: string,
+  thumbUrl: string,
   title: string,
   titleSort: string,
   type: number,
@@ -23,5 +23,6 @@ export interface Movie {
   userRating: number,
   year: number,
   media: Media[],
-  library: string
+  library: string,
+  url: string,
 }

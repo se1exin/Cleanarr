@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 
 import requests
 from plexapi.media import Media, MediaPart, MediaPartStream
@@ -58,8 +59,7 @@ class PlexWrapper(object):
     def get_movie(self, media_id):
         return self.plex.fetchItem(media_id)
 
-    @classmethod
-    def video_to_dict(cls, video: Video) -> dict:
+    def video_to_dict(self, video: Video) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Video
         return {
             "addedAt": str(video.addedAt),
@@ -67,7 +67,7 @@ class PlexWrapper(object):
             "lastViewedAt": str(video.lastViewedAt),
             "librarySectionID": video.librarySectionID,
             "summary": video.summary,
-            "thumb": video.thumb,
+            "thumbUrl": video.thumbUrl,
             "title": video.title,
             "titleSort": video.titleSort,
             "type": video.type,
@@ -75,11 +75,10 @@ class PlexWrapper(object):
             "viewCount": str(video.viewCount),
         }
 
-    @classmethod
-    def movie_to_dict(cls, movie: Movie, library: str) -> dict:
+    def movie_to_dict(self, movie: Movie, library: str) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
         return {
-            **cls.video_to_dict(movie),
+            **self.video_to_dict(movie),
             "library": library,
             "duration": movie.duration,
             "guid": movie.guid,
@@ -91,7 +90,8 @@ class PlexWrapper(object):
             "tagline": movie.tagline,
             "userRating": movie.userRating,
             "year": movie.year,
-            "media": [cls.media_to_dict(media) for media in movie.media],
+            "media": [self.media_to_dict(media) for media in movie.media],
+            "url": self.baseurl + '/web/index.html#!/server/' + self.plex.machineIdentifier + '/details?key=' + urllib.parse.quote_plus(movie.key)
         }
 
     @classmethod

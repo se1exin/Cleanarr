@@ -11,7 +11,6 @@ export class ServerInfoStore {
 
   @action
   loadServerInfo() {
-    console.log('LOAD')
     getServerInfo().then((result) => {
       runInAction(() => {
         this.serverName = result.data.name;

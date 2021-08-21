@@ -40,7 +40,7 @@ const App = () => {
                 {serverInfoStore.serverUrl && (
                   <Button onClick={onClickServerLink}>
                     {serverInfoStore.serverName}
-                    <Icon icon={"share"} size={10} style={{marginLeft: "5px"}} />
+                    <Icon icon={"share"} size={10} marginLeft={majorScale(1)} />
                   </Button>
                 )}
               </>

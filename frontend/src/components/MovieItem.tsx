@@ -1,4 +1,4 @@
-import {Card, Checkbox, Dialog, Heading, Icon, IconButton, majorScale, Pane, Table} from "evergreen-ui";
+import {Button, Card, Checkbox, Dialog, Heading, Icon, IconButton, Image, majorScale, Pane, Table} from "evergreen-ui";
 import {Observer} from "mobx-react-lite";
 import React, {FunctionComponent, useState} from 'react';
 import {Media, MediaPart, Movie} from "../types";
@@ -40,6 +40,9 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
     }
   };
 
+  const onClickServerLink = () => {
+    window.open(movie.url, '_blank');
+  }
 
   return (
     <>
@@ -48,14 +51,22 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
       marginY={majorScale(1)}
     >
       <Pane
-        padding={majorScale(2)}
+        padding={majorScale(1)}
+        alignItems="center" display="flex"
       >
-        <Heading>
-          { `${movie.title} (${movie.year})` }
-        </Heading>
-        <Heading size={100}>
-          { `${movie.library}` }
-        </Heading>
+        <Image src={movie.thumbUrl} width={50} height={"auto"} marginRight={majorScale(2)} />
+        <Pane flex={1}>
+          <Heading>
+            { `${movie.title} (${movie.year})` }
+          </Heading>
+          <Heading size={100}>
+            { `${movie.library}` }
+          </Heading>
+        </Pane>
+        <Button onClick={onClickServerLink}>
+          Open in Plex
+          <Icon icon={"share"} size={10} marginLeft={majorScale(1)} />
+        </Button>
       </Pane>
       <Table>
         <Table.Head>
@@ -129,7 +140,7 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
           onConfirm={onClickConfirmDelete}
           onCloseComplete={() => setMediaItemToDelete(null)}
         >
-          Are you sure you want to delete the following file for <b>{movie.title}</b>
+          Are you sure you want to delete the following file for <b>{movie.title}</b>?
           { mediaItemToDelete && mediaItemToDelete!.parts.map((part: MediaPart, index: number) => (
             <pre style={{whiteSpace: "normal"}} key={index}>{ part.file }</pre>
           ))}
