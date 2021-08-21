@@ -1,4 +1,4 @@
-# Plex Library Cleaner
+# Cleanarr
 
 A simple UI to help find and delete duplicate and sample files from your Plex server.
 
@@ -13,7 +13,7 @@ You will need a Plex Token: [How to find your Plex Token](https://support.plex.t
 
 ## Run with Docker
 
-This project is available as a docker container on [Docker Hub](https://hub.docker.com/r/selexin/plex-library-cleaner).
+This project is available as a docker container on [Docker Hub](https://hub.docker.com/r/selexin/cleanarr).
 
 ### Docker Parameters
 
@@ -24,7 +24,7 @@ You will need to set the correct parameters for your setup:
 | `-e PLEX_BASE_URL="plex_address"` | (**required**) Plex Server Address (e.g. http://192.169.1.100:32400) |
 | `-e PLEX_TOKEN="somerandomstring"` | (**required**) A valid Plex token for your Plex Server ([How to find your Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)) |
 | `-e LIBRARY_NAMES="Movies"`| (**optional**) Name(s) of your Plex Libraries to search. Separate multiple library names with ";" character. E.g. `"Movies 1;Movies 2"`. Default value is **"Movies"** |
-| `-e BYPASS_SSL_VERIFY=1` | (**optional**) Disable SSL certificate verification. Use this if your Plex Server has "Secure Connections: Required" and you are having issues connecting to it. (Thanks [@booksarestillbetter - #2](https://github.com/se1exin/Plex-Library-Cleaner/issues/2)) |
+| `-e BYPASS_SSL_VERIFY=1` | (**optional**) Disable SSL certificate verification. Use this if your Plex Server has "Secure Connections: Required" and you are having issues connecting to it. (Thanks [@booksarestillbetter - #2](https://github.com/se1exin/cleanarr/issues/2)) |
 | `-p 5000:80` | (**required**) Expose the UI via the selected port (in this case `5000`). Change `5000` to the port of your choosing, but don't change the number `80`. |
 
 
@@ -35,7 +35,7 @@ docker run \
 	-e PLEX_TOKEN="somerandomstring" \
 	-e LIBRARY_NAMES="Movies" \
 	-p 5000:80 \
-	selexin/plex-library-cleaner:latest
+	selexin/cleanarr:latest
 ```
 
 #### Example using Docker Compose
@@ -48,10 +48,10 @@ version: '3'
 
 services:
 
-  plex-library-cleaner:
-    image: selexin/plex-library-cleaner:latest
-    container_name: plex-library-cleaner
-    hostname: plex-library-cleaner
+  cleanarr:
+    image: selexin/cleanarr:latest
+    container_name: cleanarr
+    hostname: cleanarr
     ports:
       - "5000:80"
     environment:
@@ -71,7 +71,7 @@ To run from source you need to run two parts - the Python Backend and React Fron
 
 First clone down this repo:
 ```
-git clone https://github.com/se1exin/Plex-Library-Cleaner
+git clone https://github.com/se1exin/cleanarr
 ```
 
 ## Backend
@@ -135,4 +135,4 @@ Thanks to the following projects:
 - [tiangolo/uwsgi-nginx-flask-docker](https://github.com/tiangolo/uwsgi-nginx-flask-docker)
 
 ## License
-MIT - see [LICENSE.md](https://github.com/se1exin/Plex-Library-Cleaner/blob/master/LICENSE.md)
+MIT - see [LICENSE.md](https://github.com/se1exin/cleanarr/blob/master/LICENSE.md)
