@@ -8,7 +8,7 @@ from plexapi.video import Movie, Video
 
 class PlexWrapper(object):
     def __init__(self):
-        baseurl = os.environ.get("PLEX_BASE_URL")
+        self.baseurl = os.environ.get("PLEX_BASE_URL")
         token = os.environ.get("PLEX_TOKEN")
         self.maxresults = int(os.environ.get("MAXRESULTS", 50))
         verify_ssl = os.environ.get("BYPASS_SSL_VERIFY", "0") != "1"
@@ -20,10 +20,16 @@ class PlexWrapper(object):
 
         session = requests.Session()
         session.verify = verify_ssl
-        self.plex = PlexServer(baseurl, token, session=session, timeout=(60 * 60))
+        self.plex = PlexServer(self.baseurl, token, session=session, timeout=(60 * 60))
 
     def _get_sections(self):
         return [self.plex.library.section(title=library) for library in self.libraries]
+
+    def get_server_info(self):
+        return {
+            'name': self.plex.friendlyName,
+            'url': self.baseurl + '/web/index.html'
+        }
 
     def get_dupe_movies(self):
         dupes = []
