@@ -14,6 +14,12 @@ def internal_error(error):
     return jsonify({"error": str(error)}), 500
 
 
+@app.route("/server/info")
+def get_server_info():
+    info = PlexWrapper().get_server_info()
+    return jsonify(info)
+
+
 @app.route("/movies/dupes")
 def get_movies():
     dupes = PlexWrapper().get_dupe_movies()

@@ -1,7 +1,7 @@
 import {majorScale, Pane, toaster} from "evergreen-ui";
 import {autorun} from "mobx";
 import {Observer} from "mobx-react-lite";
-import React, {FunctionComponent, useEffect, useState} from 'react';
+import React, {FunctionComponent, useCallback, useEffect, useState} from 'react';
 import {newMediaStoreContext} from "../stores/MediaStore";
 import {newMovieStoreContext} from "../stores/MovieStore";
 import {Media, Movie} from "../types";
@@ -32,37 +32,6 @@ export const MoviePage:FunctionComponent<any> = () => {
   useEffect(() => {
     onRefresh();
   });
-
-  useEffect(() => {
-    // Determine the default media items to be removed
-    autorun(() => {
-      movieStore.movies.forEach((movie: Movie) => {
-        let _media = [
-          ...movie.media
-        ];
-        let sortedMedia = _media
-          .sort((a, b) => {
-            const aSize = sumMediaSize(a);
-            const bSize = sumMediaSize(b);
-            if (aSize < bSize) return 1;
-            if (aSize > bSize) return -1;
-            return 0;
-          })
-          .sort((a, b) => {
-            if (a.width < b.width) return 1;
-            if (a.width > b.width) return -1;
-            return 0;
-          });
-
-        // Remove the top entry and then select/check (for removal) the rest
-        sortedMedia.forEach(((media, index) => {
-          if (index !== 0) {
-            mediaStore.addMedia(media);
-          }
-        }));
-      });
-    });
-  }, [mediaStore, mediaStore.media, movieStore.movies]);
 
   const onListingTypeChange = (listingType: string): void => {
     setListingType(listingType);
@@ -115,6 +84,68 @@ export const MoviePage:FunctionComponent<any> = () => {
     mediaStore.reset();
   };
 
+  const onResetSelection = useCallback(() => {
+    movieStore.movies.forEach((movie: Movie) => {
+      let _media = [
+        ...movie.media
+      ];
+      let sortedMedia = _media
+        .sort((a, b) => {
+          const aSize = sumMediaSize(a);
+          const bSize = sumMediaSize(b);
+          if (aSize < bSize) return 1;
+          if (aSize > bSize) return -1;
+          return 0;
+        })
+        .sort((a, b) => {
+          if (a.width < b.width) return 1;
+          if (a.width > b.width) return -1;
+          return 0;
+        });
+
+      // Remove the top entry and then select/check (for removal) the rest
+      sortedMedia.forEach(((media, index) => {
+        if (index !== 0) {
+          mediaStore.addMedia(media);
+        }
+      }));
+    });
+  }, [mediaStore, movieStore.movies]);
+
+
+  useEffect(() => {
+    // Determine the default media items to be removed
+    autorun(() => {
+      onResetSelection();
+    });
+  }, [onResetSelection]);
+
+  const onInvertSelection = () => {
+    movieStore.movies.forEach(movie => {
+      movie.media.forEach(media => {
+        if (media.id in mediaStore.media) {
+          mediaStore.removeMedia(media);
+        } else {
+          mediaStore.addMedia(media);
+        }
+      });
+    });
+  };
+
+  const onDeleteMediaItem = (movie: Movie, media: Media) => {
+    toaster.warning(`Deleting item...`, {
+      duration: 5,
+      id: 'delete-toaster'
+    });
+    mediaStore.deleteMedia(movie.key, media).then(() => {
+      deletedMediaStore.addMedia(media);
+      toaster.success(`Item deleted!`, {
+        duration: 5,
+        id: 'delete-toaster'
+      });
+    })
+  }
+
   const renderMovieList = () => (
     <Observer>
       {() => (
@@ -136,6 +167,7 @@ export const MoviePage:FunctionComponent<any> = () => {
         <MovieItem
           addMedia={(media: Media) => mediaStore.addMedia(media)}
           removeMedia={(media: Media) => mediaStore.removeMedia(media)}
+          onDeleteMedia={onDeleteMediaItem}
           selectedMedia={mediaStore.media}
           deletedMedia={deletedMediaStore.media}
           movie={movie}
@@ -160,6 +192,8 @@ export const MoviePage:FunctionComponent<any> = () => {
             listingType={listingType}
             onListingTypeChange={onListingTypeChange}
             onDeselectAll={onDeselectAll}
+            onResetSelection={onResetSelection}
+            onInvertSelection={onInvertSelection}
           />
         )}
       </Observer>
