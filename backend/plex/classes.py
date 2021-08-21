@@ -73,6 +73,7 @@ class PlexWrapper(object):
             "type": video.type,
             "updatedAt": str(video.updatedAt),
             "viewCount": str(video.viewCount),
+            "url": self.baseurl + '/web/index.html#!/server/' + self.plex.machineIdentifier + '/details?key=' + urllib.parse.quote_plus(video.key)
         }
 
     def movie_to_dict(self, movie: Movie, library: str) -> dict:
@@ -91,7 +92,6 @@ class PlexWrapper(object):
             "userRating": movie.userRating,
             "year": movie.year,
             "media": [self.media_to_dict(media) for media in movie.media],
-            "url": self.baseurl + '/web/index.html#!/server/' + self.plex.machineIdentifier + '/details?key=' + urllib.parse.quote_plus(movie.key)
         }
 
     @classmethod

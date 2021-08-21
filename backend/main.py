@@ -1,5 +1,7 @@
+import io
 import os
 
+import requests as requests
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
@@ -18,6 +20,16 @@ def internal_error(error):
 def get_server_info():
     info = PlexWrapper().get_server_info()
     return jsonify(info)
+
+
+@app.route("/server/proxy")
+def get_server_proxy():
+    # Proxy a request to the server - useful when the user
+    # is viewing the cleanarr dash over HTTPS to avoid the browser
+    # blocking untrusted server certs
+    url = request.args.get('url')
+    r = requests.get(url)
+    return send_file(io.BytesIO(r.content), mimetype='image/jpeg')
 
 
 @app.route("/movies/dupes")
@@ -47,7 +59,6 @@ def delete_media():
                 print(part.file)
             media.delete()
     return jsonify({"success": True})
-
 
 # Static File Hosting Hack
 # See https://github.com/tiangolo/uwsgi-nginx-flask-docker/blob/master/deprecated-single-page-apps-in-same-container.md

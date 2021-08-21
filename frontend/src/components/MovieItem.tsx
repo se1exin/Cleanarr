@@ -3,6 +3,7 @@ import {Observer} from "mobx-react-lite";
 import React, {FunctionComponent, useState} from 'react';
 import {Media, MediaPart, Movie} from "../types";
 import {bytesToSize, sumMediaSize} from "../util";
+import {BACKEND_URL} from "../util/api";
 
 type DupeMovieProps = {
   addMedia: Function,
@@ -54,7 +55,7 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
         padding={majorScale(1)}
         alignItems="center" display="flex"
       >
-        <Image src={movie.thumbUrl} width={50} height={"auto"} marginRight={majorScale(2)} />
+        <Image src={`${BACKEND_URL}server/proxy?url=${encodeURIComponent(movie.thumbUrl)}`} width={50} height={"auto"} marginRight={majorScale(2)} />
         <Pane flex={1}>
           <Heading>
             { `${movie.title} (${movie.year})` }
