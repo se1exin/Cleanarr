@@ -127,6 +127,20 @@ export const MoviePage:FunctionComponent<any> = () => {
     });
   };
 
+  const onDeleteMediaItem = (movie: Movie, media: Media) => {
+    toaster.warning(`Deleting item...`, {
+      duration: 5,
+      id: 'delete-toaster'
+    });
+    mediaStore.deleteMedia(movie.key, media).then(() => {
+      deletedMediaStore.addMedia(media);
+      toaster.success(`Item deleted!`, {
+        duration: 5,
+        id: 'delete-toaster'
+      });
+    })
+  }
+
   const renderMovieList = () => (
     <Observer>
       {() => (
@@ -148,6 +162,7 @@ export const MoviePage:FunctionComponent<any> = () => {
         <MovieItem
           addMedia={(media: Media) => mediaStore.addMedia(media)}
           removeMedia={(media: Media) => mediaStore.removeMedia(media)}
+          onDeleteMedia={onDeleteMediaItem}
           selectedMedia={mediaStore.media}
           deletedMedia={deletedMediaStore.media}
           movie={movie}

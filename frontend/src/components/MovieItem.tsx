@@ -1,12 +1,13 @@
-import {Card, Checkbox, Heading, Icon, majorScale, Pane, Table} from "evergreen-ui";
+import {Card, Checkbox, Dialog, Heading, Icon, IconButton, majorScale, Pane, Table} from "evergreen-ui";
 import {Observer} from "mobx-react-lite";
-import React, {FunctionComponent} from 'react';
+import React, {FunctionComponent, useState} from 'react';
 import {Media, MediaPart, Movie} from "../types";
 import {bytesToSize, sumMediaSize} from "../util";
 
 type DupeMovieProps = {
   addMedia: Function,
   removeMedia: Function,
+  onDeleteMedia: Function,
   selectedMedia: Record<number, Media>,
   deletedMedia: Record<number, Media>,
   movie: Movie
@@ -19,8 +20,17 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
     removeMedia,
     selectedMedia,
     deletedMedia,
+    onDeleteMedia,
     movie
   } = props;
+
+
+  const [mediaItemToDelete, setMediaItemToDelete] = useState<Media | null>(null);
+
+  const onClickConfirmDelete = () => {
+    onDeleteMedia(movie, mediaItemToDelete);
+    setMediaItemToDelete(null);
+  };
 
   const onCheckMedia = (media: Media, checked: boolean): void => {
     if (checked) {
@@ -30,7 +40,9 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
     }
   };
 
+
   return (
+    <>
     <Card
       border="default"
       marginY={majorScale(1)}
@@ -54,6 +66,7 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
           <Table.TextHeaderCell>Frame Rate</Table.TextHeaderCell>
           <Table.TextHeaderCell>Codec</Table.TextHeaderCell>
           <Table.TextHeaderCell flexBasis={500}>Files</Table.TextHeaderCell>
+          <Table.TextHeaderCell />
         </Table.Head>
         <Table.Body>
           {movie.media.map((media: Media, index: number) => (
@@ -90,6 +103,17 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
                       <p style={{whiteSpace: "normal"}} key={index}>{ part.file }</p>
                     ))}
                   </Table.TextCell>
+                  <Table.TextCell>
+                    {!(media.id in deletedMedia) && (
+                      <IconButton
+                        appearance="primary"
+                        intent="danger"
+                        icon="trash"
+                        disabled={mediaItemToDelete !== null && mediaItemToDelete.id === media.id}
+                        onClick={() => setMediaItemToDelete(media)}
+                      />
+                    )}
+                  </Table.TextCell>
                 </Table.Row>
               )}
             </Observer>
@@ -97,5 +121,19 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
         </Table.Body>
       </Table>
     </Card>
+        <Dialog
+          isShown={mediaItemToDelete !== null}
+          title="Warning"
+          intent="danger"
+          confirmLabel={`Delete Item`}
+          onConfirm={onClickConfirmDelete}
+          onCloseComplete={() => setMediaItemToDelete(null)}
+        >
+          Are you sure you want to delete the following file for <b>{movie.title}</b>
+          { mediaItemToDelete && mediaItemToDelete!.parts.map((part: MediaPart, index: number) => (
+            <pre style={{whiteSpace: "normal"}} key={index}>{ part.file }</pre>
+          ))}
+        </Dialog>
+    </>
   )
 };
