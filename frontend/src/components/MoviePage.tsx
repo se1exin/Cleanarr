@@ -115,6 +115,18 @@ export const MoviePage:FunctionComponent<any> = () => {
     mediaStore.reset();
   };
 
+  const onInvertSelection = () => {
+    movieStore.movies.forEach(movie => {
+      movie.media.forEach(media => {
+        if (media.id in mediaStore.media) {
+          mediaStore.removeMedia(media);
+        } else {
+          mediaStore.addMedia(media);
+        }
+      });
+    });
+  };
+
   const renderMovieList = () => (
     <Observer>
       {() => (
@@ -160,6 +172,7 @@ export const MoviePage:FunctionComponent<any> = () => {
             listingType={listingType}
             onListingTypeChange={onListingTypeChange}
             onDeselectAll={onDeselectAll}
+            onInvertSelection={onInvertSelection}
           />
         )}
       </Observer>
