@@ -4,7 +4,7 @@ import urllib.parse
 import requests
 from plexapi.media import Media, MediaPart, MediaPartStream
 from plexapi.server import PlexServer
-from plexapi.video import Movie, Video
+from plexapi.video import Movie, Video, Episode
 
 
 class PlexWrapper(object):
@@ -32,31 +32,39 @@ class PlexWrapper(object):
             'url': self.baseurl + '/web/index.html'
         }
 
-    def get_dupe_movies(self):
+    def get_dupe_content(self):
         dupes = []
         for section in self._get_sections():
-            for movie in section.search(duplicate=True, maxresults=self.maxresults):
+            for movie in section.search(duplicate=True, maxresults=self.maxresults, libtype='movie'):
                 if len(movie.media) > 1:
                     dupes.append(self.movie_to_dict(movie, section.title))
+            for episode in section.search(duplicate=True, maxresults=self.maxresults, libtype='episode'):
+                if len(episode.media) > 1:
+                    dupes.append(self.episode_to_dict(episode, section.title))
         return dupes
 
-    def get_movie_sample_files(self):
-        movies = []
+    def get_content_sample_files(self):
+        content = []
 
         for section in self._get_sections():
-            for movie in section.all():
+            for mediaContent in section.all():
                 samples = []
-                for media in movie.media:
+                if mediaContent.TYPE != 'movie' or mediaContent.TYPE != 'episode':
+                    continue
+                for media in mediaContent.media:
                     if media.duration is None or media.duration < (5 * 60 * 1000):
                         samples.append(self.media_to_dict(media))
                 if len(samples) > 0:
-                    _movie = self.movie_to_dict(movie, section.title)
-                    _movie["media"] = samples
-                    movies.append(_movie)
+                    _media = dict()
+                    if mediaContent.TYPE == 'movie':
+                        _media = self.movie_to_dict(mediaContent, section.title)
+                    elif mediaContent.TYPE == 'episode':
+                        _media = self.episode_to_dict(mediaContent, section.title)
+                    _media["media"] = samples
+                    content.append(_media)
+        return content
 
-        return movies
-
-    def get_movie(self, media_id):
+    def get_content(self, media_id):
         return self.plex.fetchItem(media_id)
 
     def video_to_dict(self, video: Video) -> dict:
@@ -80,6 +88,7 @@ class PlexWrapper(object):
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
         return {
             **self.video_to_dict(movie),
+            "contentType": 'movie',
             "library": library,
             "duration": movie.duration,
             "guid": movie.guid,
@@ -92,6 +101,24 @@ class PlexWrapper(object):
             "userRating": movie.userRating,
             "year": movie.year,
             "media": [self.media_to_dict(media) for media in movie.media],
+        }
+
+    def episode_to_dict(self, episode: Episode, library: str) -> dict:
+        # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
+        return {
+            **self.video_to_dict(episode),
+            "contentType": 'episode',
+            "library": library,
+            "duration": episode.duration,
+            "guid": episode.guid,
+            "originalTitle": episode.title,
+            "originallyAvailableAt": str(episode.originallyAvailableAt),
+            "rating": episode.rating,
+            "year": episode.year,
+            "seasonNumber": episode.seasonNumber,
+            "seasonEpisode": episode.seasonEpisode,
+            "seriesTitle": episode.grandparentTitle,
+            "media": [self.media_to_dict(media) for media in episode.media],
         }
 
     @classmethod

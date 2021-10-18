@@ -2,7 +2,7 @@
 
 A simple UI to help find and delete duplicate and sample files from your Plex server.
 
-> Note: At this time only Plex Movie Libraries are supported.
+> Note: At this time only Plex Content Libraries are supported.
 
 > **Important Note: A maximum of 50 results are shown at a time to avoid Plex timeouts**
 

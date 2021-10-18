@@ -1,6 +1,7 @@
 import {Media} from "./Media";
 
-export interface Movie {
+export interface Content {
+  contentType: 'episode' | 'movie';
   addedAt: string,
   key: string,
   lastViewedAt: string,
@@ -22,6 +23,9 @@ export interface Movie {
   tagline: string,
   userRating: number,
   year: number,
+  seasonNumber?: string,
+  seasonEpisode?: string,
+  seriesTitle?: string,
   media: Media[],
   library: string,
   url: string,

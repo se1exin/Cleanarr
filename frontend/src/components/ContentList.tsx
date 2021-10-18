@@ -1,24 +1,24 @@
 import {Alert, majorScale, Pane, Paragraph, Spinner} from "evergreen-ui";
 import React, {FunctionComponent} from 'react';
-import {Movie} from "../types";
+import {Content} from "../types";
 
 type DupeMovieListProps = {
   loading: boolean,
   loadingFailed: boolean,
   loadingError: Error | null,
   listingType: string,
-  movies: Movie[],
-  renderMovieItem: (movie: Movie, key: number) => JSX.Element
+  content: Content[],
+  renderContentItem: (movie: Content, key: number) => JSX.Element
 }
 
-export const MovieList:FunctionComponent<DupeMovieListProps> = (props) => {
+export const ContentList:FunctionComponent<DupeMovieListProps> = (props) => {
   const {
     loading,
     loadingFailed,
     loadingError,
     listingType,
-    movies,
-    renderMovieItem
+    content,
+    renderContentItem
   } = props;
 
   const renderLoader = () => (
@@ -46,7 +46,7 @@ export const MovieList:FunctionComponent<DupeMovieListProps> = (props) => {
     return (
       <Alert
         intent="danger"
-        title="Failed to load movies!"
+        title="Failed to load content!"
       >
         {loadingError ? loadingError.message : 'Please check your Plex settings and try again.'}
       </Alert>
@@ -65,15 +65,15 @@ export const MovieList:FunctionComponent<DupeMovieListProps> = (props) => {
     >
       <Alert
         intent="success"
-        title={`No ${listingType} movies found`}
+        title={`No ${listingType} content found`}
       />
     </Pane>
   );
 
   const renderMovieList = () => (
     <>
-    {movies.map((movie: Movie, key: number) => (
-        renderMovieItem(movie, key)
+    {content.map((movie: Content, key: number) => (
+        renderContentItem(movie, key)
     ))}
     </>
   );
@@ -83,7 +83,7 @@ export const MovieList:FunctionComponent<DupeMovieListProps> = (props) => {
       <>
       { (loading || loadingFailed) ?
         renderLoader()
-        : movies.length === 0 ?
+        : content.length === 0 ?
           renderEmptyMessage()
         :
         renderMovieList()
