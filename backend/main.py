@@ -32,29 +32,29 @@ def get_server_proxy():
     return send_file(io.BytesIO(r.content), mimetype='image/jpeg')
 
 
-@app.route("/movies/dupes")
+@app.route("/content/dupes")
 def get_movies():
-    dupes = PlexWrapper().get_dupe_movies()
+    dupes = PlexWrapper().get_dupe_content()
     return jsonify(dupes)
 
 
-@app.route("/movies/samples")
+@app.route("/content/samples")
 def get_movies_samples():
-    samples = PlexWrapper().get_movie_sample_files()
+    samples = PlexWrapper().get_content_sample_files()
     return jsonify(samples)
 
 
 @app.route("/delete/media", methods=["POST"])
 def delete_media():
     content = request.get_json()
-    movie_key = content["movie_key"]
+    content_key = content["content_key"]
     media_id = content["media_id"]
 
-    movie = PlexWrapper().get_movie(movie_key)
+    content = PlexWrapper().get_content(content_key)
 
-    for media in movie.media:
+    for media in content.media:
         if media.id == media_id:
-            print(movie.title, media.id)
+            print(content.title, media.id)
             for part in media.parts:
                 print(part.file)
             media.delete()

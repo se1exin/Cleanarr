@@ -1,7 +1,7 @@
 import {Button, Card, Checkbox, Dialog, Heading, Icon, IconButton, Image, majorScale, Pane, Table} from "evergreen-ui";
 import {Observer} from "mobx-react-lite";
 import React, {FunctionComponent, useState} from 'react';
-import {Media, MediaPart, Movie} from "../types";
+import {Media, MediaPart, Content} from "../types";
 import {bytesToSize, sumMediaSize} from "../util";
 import {BACKEND_URL} from "../util/api";
 
@@ -11,10 +11,10 @@ type DupeMovieProps = {
   onDeleteMedia: Function,
   selectedMedia: Record<number, Media>,
   deletedMedia: Record<number, Media>,
-  movie: Movie
+  content: Content
 }
 
-export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
+export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
 
   const {
     addMedia,
@@ -22,14 +22,14 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
     selectedMedia,
     deletedMedia,
     onDeleteMedia,
-    movie
+    content
   } = props;
 
 
   const [mediaItemToDelete, setMediaItemToDelete] = useState<Media | null>(null);
 
   const onClickConfirmDelete = () => {
-    onDeleteMedia(movie, mediaItemToDelete);
+    onDeleteMedia(content, mediaItemToDelete);
     setMediaItemToDelete(null);
   };
 
@@ -42,7 +42,7 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
   };
 
   const onClickServerLink = () => {
-    window.open(movie.url, '_blank');
+    window.open(content.url, '_blank');
   }
 
   return (
@@ -55,13 +55,14 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
         padding={majorScale(1)}
         alignItems="center" display="flex"
       >
-        <Image src={`${BACKEND_URL}server/proxy?url=${encodeURIComponent(movie.thumbUrl)}`} width={50} height={"auto"} marginRight={majorScale(2)} />
+        <Image src={`${BACKEND_URL}server/proxy?url=${encodeURIComponent(content.thumbUrl)}`} width={50} height={"auto"} marginRight={majorScale(2)} />
         <Pane flex={1}>
           <Heading>
-            { `${movie.title} (${movie.year})` }
+            { content.contentType === 'movie'  && `${content.title } (${content.year})` }
+            { content.contentType === 'episode'  && `${content.title } - ${content.seriesTitle } ${content.seasonEpisode}` }
           </Heading>
           <Heading size={100}>
-            { `${movie.library}` }
+            { `${content.library}` }
           </Heading>
         </Pane>
         <Button onClick={onClickServerLink}>
@@ -81,7 +82,7 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
           <Table.TextHeaderCell />
         </Table.Head>
         <Table.Body>
-          {movie.media.map((media: Media, index: number) => (
+          {content.media.map((media: Media, index: number) => (
             <Observer key={media.id}>
               {() => (
                 <Table.Row
@@ -141,7 +142,7 @@ export const MovieItem:FunctionComponent<DupeMovieProps> = (props) => {
           onConfirm={onClickConfirmDelete}
           onCloseComplete={() => setMediaItemToDelete(null)}
         >
-          Are you sure you want to delete the following file for <b>{movie.title}</b>?
+          Are you sure you want to delete the following file for <b>{content.title}</b>?
           { mediaItemToDelete && mediaItemToDelete!.parts.map((part: MediaPart, index: number) => (
             <pre style={{whiteSpace: "normal"}} key={index}>{ part.file }</pre>
           ))}

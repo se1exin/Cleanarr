@@ -1,11 +1,11 @@
 import {action, computed, observable} from "mobx";
 import React, {Context} from "react";
-import {Movie} from "../types";
-import {getDupeMovies, getSampleMovies} from "../util/api";
+import {Content} from "../types";
+import {getDupeContent, getSampleContent} from "../util/api";
 
-export class MovieStore {
+export class ContentStore {
   @observable.deep
-  movies: Movie[] = [];
+  content: Content[] = [];
 
   @observable
   loading: boolean = false;
@@ -18,21 +18,21 @@ export class MovieStore {
 
   @computed
   get length(): number {
-    return this.movies.length;
+    return this.content.length;
   }
 
   @action
-  setMovies(movies: Movie[]) {
-    this.movies = movies;
+  setContent(movies: Content[]) {
+    this.content = movies;
   }
 
-  loadMovies(handlerFn: () => Promise<any>): void {
+  loadContent(handlerFn: () => Promise<any>): void {
     this.loading = true;
     this.loadingFailed = false;
     this.loadingError = null;
-    this.setMovies([]);
+    this.setContent([]);
     handlerFn().then(result => {
-      this.setMovies(result.data);
+      this.setContent(result.data);
       this.loading = false;
     }).catch((error) => {
 
@@ -45,19 +45,19 @@ export class MovieStore {
     });
   }
 
-  loadDupeMovies(): void {
-    this.loadMovies(getDupeMovies);
+  loadDupeContent(): void {
+    this.loadContent(getDupeContent);
   }
 
   loadSampleMovies(): void {
-    this.loadMovies(getSampleMovies);
+    this.loadContent(getSampleContent);
   }
 }
 
-export function newMovieStore(): MovieStore {
-  return new MovieStore();
+export function newContentStore(): ContentStore {
+  return new ContentStore();
 }
 
-export function newMovieStoreContext(): Context<MovieStore> {
-  return React.createContext<MovieStore>(newMovieStore());
+export function newMovieStoreContext(): Context<ContentStore> {
+  return React.createContext<ContentStore>(newContentStore());
 }

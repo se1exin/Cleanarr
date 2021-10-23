@@ -3,14 +3,14 @@ import {autorun} from "mobx";
 import {Observer} from "mobx-react-lite";
 import React, {FunctionComponent, useCallback, useEffect, useState} from 'react';
 import {newMediaStoreContext} from "../stores/MediaStore";
-import {newMovieStoreContext} from "../stores/MovieStore";
-import {Media, Movie} from "../types";
+import {newMovieStoreContext} from "../stores/ContentStore";
+import {Media, Content} from "../types";
 import {bytesToSize, sumMediaSize} from "../util";
-import {MovieItem} from "./MovieItem";
-import {MovieList} from "./MovieList";
-import {MovieTopBar} from "./MovieTopBar";
+import {ContentItem} from "./ContentItem";
+import {ContentList} from "./ContentList";
+import {ContentTopBar} from "./ContentTopBar";
 
-export const MoviePage:FunctionComponent<any> = () => {
+export const ContentPage:FunctionComponent<any> = () => {
 
   const listingTypes = [
     {
@@ -46,7 +46,7 @@ export const MoviePage:FunctionComponent<any> = () => {
 
     let promises: Promise<any>[] = [];
 
-    movieStore.movies.forEach(movie => {
+    movieStore.content.forEach(movie => {
       movie.media.forEach(media => {
         if (media.id in mediaStore.media) {
           promises.push(
@@ -74,7 +74,7 @@ export const MoviePage:FunctionComponent<any> = () => {
     mediaStore.reset();
     deletedMediaStore.reset();
     if (listingType === 'duplicate') {
-      movieStore.loadDupeMovies();
+      movieStore.loadDupeContent();
     } else if (listingType === 'sample') {
       movieStore.loadSampleMovies();
     }
@@ -85,7 +85,7 @@ export const MoviePage:FunctionComponent<any> = () => {
   };
 
   const onResetSelection = useCallback(() => {
-    movieStore.movies.forEach((movie: Movie) => {
+    movieStore.content.forEach((movie: Content) => {
       let _media = [
         ...movie.media
       ];
@@ -110,7 +110,7 @@ export const MoviePage:FunctionComponent<any> = () => {
         }
       }));
     });
-  }, [mediaStore, movieStore.movies]);
+  }, [mediaStore, movieStore.content]);
 
 
   useEffect(() => {
@@ -121,7 +121,7 @@ export const MoviePage:FunctionComponent<any> = () => {
   }, [onResetSelection]);
 
   const onInvertSelection = () => {
-    movieStore.movies.forEach(movie => {
+    movieStore.content.forEach(movie => {
       movie.media.forEach(media => {
         if (media.id in mediaStore.media) {
           mediaStore.removeMedia(media);
@@ -132,7 +132,7 @@ export const MoviePage:FunctionComponent<any> = () => {
     });
   };
 
-  const onDeleteMediaItem = (movie: Movie, media: Media) => {
+  const onDeleteMediaItem = (movie: Content, media: Media) => {
     toaster.warning(`Deleting item...`, {
       duration: 5,
       id: 'delete-toaster'
@@ -149,28 +149,28 @@ export const MoviePage:FunctionComponent<any> = () => {
   const renderMovieList = () => (
     <Observer>
       {() => (
-        <MovieList
+        <ContentList
           loading={movieStore.loading}
           loadingFailed={movieStore.loadingFailed}
           loadingError={movieStore.loadingError}
           listingType={listingType}
-          movies={movieStore.movies}
-          renderMovieItem={renderMovieItem}
+          content={movieStore.content}
+          renderContentItem={renderMovieItem}
         />
       )}
     </Observer>
   );
 
-  const renderMovieItem = (movie: Movie, key: number) => (
+  const renderMovieItem = (movie: Content, key: number) => (
     <Observer key={key}>
       {() => (
-        <MovieItem
+        <ContentItem
           addMedia={(media: Media) => mediaStore.addMedia(media)}
           removeMedia={(media: Media) => mediaStore.removeMedia(media)}
           onDeleteMedia={onDeleteMediaItem}
           selectedMedia={mediaStore.media}
           deletedMedia={deletedMediaStore.media}
-          movie={movie}
+          content={movie}
         />
       )}
     </Observer>
@@ -180,10 +180,10 @@ export const MoviePage:FunctionComponent<any> = () => {
     return (
       <Observer>
         {() => (
-          <MovieTopBar
+          <ContentTopBar
             loading={movieStore.loading}
             deleting={mediaStore.length > 0 && deletedMediaStore.length > 0}
-            numMovies={movieStore.length}
+            numContent={movieStore.length}
             numSelected={mediaStore.length}
             totalSize={bytesToSize(mediaStore.totalSizeBytes)}
             onDeleteMedia={onDeleteMedia}

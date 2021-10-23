@@ -4,7 +4,7 @@ import React, {FunctionComponent, useState} from "react";
 type DupeMovieTopBarProps = {
   loading: boolean,
   deleting: boolean,
-  numMovies: number,
+  numContent: number,
   numSelected: number,
   totalSize: string,
   onDeleteMedia: () => void,
@@ -17,11 +17,11 @@ type DupeMovieTopBarProps = {
   onInvertSelection: () => void
 }
 
-export const MovieTopBar:FunctionComponent<DupeMovieTopBarProps> = (props) => {
+export const ContentTopBar:FunctionComponent<DupeMovieTopBarProps> = (props) => {
   const {
     loading,
     deleting,
-    numMovies,
+    numContent,
     numSelected,
     totalSize,
     onDeleteMedia,
@@ -63,8 +63,8 @@ export const MovieTopBar:FunctionComponent<DupeMovieTopBarProps> = (props) => {
             onChange={value => onListingTypeChange(value.toString())}
           />
           <Heading flex={1}>
-            Movies:
-            <Pill display="inline-flex" margin={8} color="green">{ loading ? '-' : numMovies }</Pill>
+            Content Found:
+            <Pill display="inline-flex" margin={8} color="green">{ loading ? '-' : numContent }</Pill>
           </Heading>
           <Heading flex={1}>
             Selected:
@@ -76,7 +76,7 @@ export const MovieTopBar:FunctionComponent<DupeMovieTopBarProps> = (props) => {
           </Heading>
         </Pane>
         <Pane display="flex">
-          { numMovies > 0 && numSelected === 0 ? (
+          { numContent > 0 && numSelected === 0 ? (
             <Button
               appearance="default"
               intent="none"

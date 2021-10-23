@@ -2,7 +2,7 @@ import {Button, Heading, Icon, majorScale, Pane} from 'evergreen-ui'
 import {Observer} from "mobx-react-lite";
 import React, {useEffect} from 'react';
 import './App.css';
-import {MoviePage} from "./components/MoviePage";
+import {ContentPage} from "./components/ContentPage";
 import {newServerInfoStoreContext} from "./stores/ServerInfoStore";
 
 const App = () => {
@@ -48,7 +48,7 @@ const App = () => {
           </Observer>
 
       </Pane>
-      <MoviePage/>
+      <ContentPage/>
     </Pane>
   );
 }
