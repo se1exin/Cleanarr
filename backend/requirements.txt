@@ -7,7 +7,7 @@ idna==2.8
 itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
-PlexAPI==3.3.0
+PlexAPI==4.10.1
 requests==2.26.0
 six==1.14.0
 tqdm==4.42.0

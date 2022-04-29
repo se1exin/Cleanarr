@@ -11,7 +11,7 @@ class PlexWrapper(object):
     def __init__(self):
         self.baseurl = os.environ.get("PLEX_BASE_URL")
         token = os.environ.get("PLEX_TOKEN")
-        self.maxresults = int(os.environ.get("MAXRESULTS", 50))
+        self.page_size = int(os.environ.get("PAGE_SIZE", 50))
         verify_ssl = os.environ.get("BYPASS_SSL_VERIFY", "0") != "1"
         self.libraries = [
             x.strip()
@@ -35,12 +35,35 @@ class PlexWrapper(object):
     def get_dupe_content(self):
         dupes = []
         for section in self._get_sections():
-            for movie in section.search(duplicate=True, maxresults=self.maxresults, libtype='movie'):
-                if len(movie.media) > 1:
-                    dupes.append(self.movie_to_dict(movie, section.title))
-            for episode in section.search(duplicate=True, maxresults=self.maxresults, libtype='episode'):
-                if len(episode.media) > 1:
-                    dupes.append(self.episode_to_dict(episode, section.title))
+            if section.type == "movie":
+                # Recursively search movies
+                offset = 0
+                end = False
+                while not end:
+                    limit = offset + self.page_size
+                    results = section.search(duplicate=True, libtype='movie', container_start=offset, limit=limit)
+                    if len(results) == 0:
+                        end = True
+                    else:
+                        offset += self.page_size
+                        for movie in results:
+                            if len(episode.media) > 1:
+                                dupes.append(self.movie_to_dict(movie, section.title))
+
+            if section.type == "show":
+                # Recursively search TV
+                offset = 0
+                end = False
+                while not end:
+                    limit = offset + self.page_size
+                    results = section.search(duplicate=True, libtype='episode', container_start=offset, limit=limit)
+                    if len(results) == 0:
+                        end = True
+                    else:
+                        offset += self.page_size
+                        for episode in results:
+                            if len(episode.media) > 1:
+                                dupes.append(self.episode_to_dict(episode, section.title))
         return dupes
 
     def get_content_sample_files(self):
