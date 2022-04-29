@@ -92,7 +92,7 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
                     flexBasis={50} flexShrink={0} flexGrow={0}
                   >
                     {media.id in deletedMedia ?
-                      <Icon icon="cross" color="red" />
+                      <Icon icon="cross" color="red" size={10} />
                       :
                       <Checkbox
                         label={""}

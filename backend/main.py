@@ -5,7 +5,7 @@ import requests as requests
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
-from plex.classes import PlexWrapper
+from plexwrapper import PlexWrapper
 
 app = Flask(__name__)
 CORS(app)
@@ -33,32 +33,34 @@ def get_server_proxy():
 
 
 @app.route("/content/dupes")
-def get_movies():
+def get_dupes():
     dupes = PlexWrapper().get_dupe_content()
     return jsonify(dupes)
 
 
 @app.route("/content/samples")
-def get_movies_samples():
+def get_samples():
     samples = PlexWrapper().get_content_sample_files()
     return jsonify(samples)
+
+
+@app.route("/server/deleted-sizes")
+def get_deleted_sizes():
+    sizes = PlexWrapper().get_deleted_sizes()
+    return jsonify(sizes)
 
 
 @app.route("/delete/media", methods=["POST"])
 def delete_media():
     content = request.get_json()
+    library_name = content["library_name"]
     content_key = content["content_key"]
     media_id = content["media_id"]
 
-    content = PlexWrapper().get_content(content_key)
+    PlexWrapper().delete_media(library_name, content_key, media_id)
 
-    for media in content.media:
-        if media.id == media_id:
-            print(content.title, media.id)
-            for part in media.parts:
-                print(part.file)
-            media.delete()
     return jsonify({"success": True})
+
 
 # Static File Hosting Hack
 # See https://github.com/tiangolo/uwsgi-nginx-flask-docker/blob/master/deprecated-single-page-apps-in-same-container.md

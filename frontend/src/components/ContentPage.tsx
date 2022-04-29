@@ -2,13 +2,13 @@ import {majorScale, Pane, toaster} from "evergreen-ui";
 import {autorun} from "mobx";
 import {Observer} from "mobx-react-lite";
 import React, {FunctionComponent, useCallback, useEffect, useState} from 'react';
-import {newMediaStoreContext} from "../stores/MediaStore";
-import {newMovieStoreContext} from "../stores/ContentStore";
+import {deletedMediaContext, mediaContext, movieContext} from "../stores/MediaStore";
 import {Media, Content} from "../types";
 import {bytesToSize, sumMediaSize} from "../util";
 import {ContentItem} from "./ContentItem";
 import {ContentList} from "./ContentList";
 import {ContentTopBar} from "./ContentTopBar";
+import {serverInfoContext} from "../stores/ServerInfoStore";
 
 export const ContentPage:FunctionComponent<any> = () => {
 
@@ -25,9 +25,10 @@ export const ContentPage:FunctionComponent<any> = () => {
 
   const [listingType, setListingType] = useState(listingTypes[0].value);
 
-  const movieStore = React.useContext(newMovieStoreContext());
-  const mediaStore = React.useContext(newMediaStoreContext());
-  const deletedMediaStore = React.useContext(newMediaStoreContext());
+  const movieStore = React.useContext(movieContext);
+  const mediaStore = React.useContext(mediaContext);
+  const deletedMediaStore = React.useContext(deletedMediaContext);
+  const serverInfoStore = React.useContext(serverInfoContext);
 
   useEffect(() => {
     onRefresh();
@@ -46,19 +47,22 @@ export const ContentPage:FunctionComponent<any> = () => {
 
     let promises: Promise<any>[] = [];
 
+    mediaStore.isDeleting = true;
     movieStore.content.forEach(movie => {
       movie.media.forEach(media => {
         if (media.id in mediaStore.media) {
           promises.push(
-            mediaStore.deleteMedia(movie.key, media).then(() => {
+            mediaStore.deleteMedia(movie.library, movie.key, media).then(() => {
               deletedMediaStore.addMedia(media);
             })
           )
         }
       });
+      promises.push(serverInfoStore.loadDeletedSizes());
     });
 
     Promise.all(promises).then(() => {
+      mediaStore.isDeleting = false;
       toaster.success(`All items deleted!`, {
         duration: 5,
         id: 'delete-toaster'
@@ -78,6 +82,7 @@ export const ContentPage:FunctionComponent<any> = () => {
     } else if (listingType === 'sample') {
       movieStore.loadSampleMovies();
     }
+    serverInfoStore.loadDeletedSizes();
   };
 
   const onDeselectAll = () => {
@@ -137,12 +142,16 @@ export const ContentPage:FunctionComponent<any> = () => {
       duration: 5,
       id: 'delete-toaster'
     });
-    mediaStore.deleteMedia(movie.key, media).then(() => {
+    mediaStore.isDeleting = true;
+    mediaStore.deleteMedia(movie.library, movie.key, media).then(() => {
       deletedMediaStore.addMedia(media);
+      mediaStore.isDeleting = false;
       toaster.success(`Item deleted!`, {
         duration: 5,
         id: 'delete-toaster'
       });
+
+      serverInfoStore.loadDeletedSizes();
     })
   }
 
@@ -182,7 +191,7 @@ export const ContentPage:FunctionComponent<any> = () => {
         {() => (
           <ContentTopBar
             loading={movieStore.loading}
-            deleting={mediaStore.length > 0 && deletedMediaStore.length > 0}
+            deleting={mediaStore.isDeleting}
             numContent={movieStore.length}
             numSelected={mediaStore.length}
             totalSize={bytesToSize(mediaStore.totalSizeBytes)}

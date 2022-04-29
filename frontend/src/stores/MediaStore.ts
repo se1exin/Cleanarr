@@ -3,10 +3,13 @@ import React, {Context} from "react";
 import {Media} from "../types";
 import {sumMediaSize} from "../util";
 import {deleteMedia} from "../util/api";
+import {newMovieStoreContext} from "./ContentStore";
 
 export class MediaStore {
   @observable.deep
   media: Record<number, Media> = {};
+
+  @observable isDeleting = false;
 
   @action
   addMedia(media: Media) {
@@ -23,9 +26,9 @@ export class MediaStore {
     this.media = {};
   }
 
-  deleteMedia(movieKey: string, media: Media): Promise<any> {
+  deleteMedia(libraryName: string, movieKey: string, media: Media): Promise<any> {
     return new Promise((resolve, reject) => {
-      deleteMedia(movieKey, media.id)
+      deleteMedia(libraryName, movieKey, media.id)
         .then(() => {
           this.removeMedia(media);
           resolve();
@@ -57,3 +60,7 @@ export function newMediaStore(): MediaStore {
 export function newMediaStoreContext(): Context<MediaStore> {
   return React.createContext<MediaStore>(newMediaStore());
 }
+
+export const movieContext = newMovieStoreContext();
+export const mediaContext = newMediaStoreContext();
+export const deletedMediaContext = newMediaStoreContext();

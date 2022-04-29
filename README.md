@@ -19,6 +19,7 @@ You will need to set the correct parameters for your setup:
 
 | Parameter | Function |
 | ----- | --- |
+| `-v /some/path/on/your/computer:/config` | (**required**) Volume mount for config directory |
 | `-e PLEX_BASE_URL="plex_address"` | (**required**) Plex Server Address (e.g. http://192.169.1.100:32400) |
 | `-e PLEX_TOKEN="somerandomstring"` | (**required**) A valid Plex token for your Plex Server ([How to find your Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)) |
 | `-e LIBRARY_NAMES="Movies"`| (**optional**) Name(s) of your Plex Libraries to search. Separate multiple library names with ";" character. E.g. `"Movies 1;Movies 2"`. Default value is **"Movies"** |
@@ -34,6 +35,7 @@ docker run \
 	-e PLEX_TOKEN="somerandomstring" \
 	-e LIBRARY_NAMES="Movies" \
 	-p 5000:80 \
+  -v /some/path/on/your/computer:/config \
 	selexin/cleanarr:latest
 ```
 
@@ -58,6 +60,8 @@ services:
       - PLEX_TOKEN=somerandomstring
       - PLEX_BASE_URL=http://192.169.1.100:32400
       - LIBRARY_NAMES=Adult Movies;Kid Videos
+    volumes:
+      - /some/path/on/your/computer:/config
     restart: unless-stopped
 ```
 

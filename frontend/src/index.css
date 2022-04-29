@@ -11,3 +11,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.deleted-size {
+  display: inline-block;
+  margin-left: 15px;
+}

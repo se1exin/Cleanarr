@@ -6,6 +6,8 @@ from plexapi.media import Media, MediaPart, MediaPartStream
 from plexapi.server import PlexServer
 from plexapi.video import Movie, Video, Episode
 
+from database import Database
+
 
 class PlexWrapper(object):
     def __init__(self):
@@ -22,9 +24,16 @@ class PlexWrapper(object):
         session = requests.Session()
         session.verify = verify_ssl
         self.plex = PlexServer(self.baseurl, token, session=session, timeout=(60 * 60))
+        self.db = Database()
 
     def _get_sections(self):
         return [self.plex.library.section(title=library) for library in self.libraries]
+
+    def get_deleted_sizes(self):
+        sizes = {}
+        for library_name in self.libraries:
+            sizes[library_name] = self.db.get_deleted_size(library_name)
+        return sizes
 
     def get_server_info(self):
         return {
@@ -89,6 +98,18 @@ class PlexWrapper(object):
 
     def get_content(self, media_id):
         return self.plex.fetchItem(media_id)
+
+    def delete_media(self, library_name, content_key, media_id):
+        content = self.get_content(content_key)
+        deleted_size = self.db.get_deleted_size(library_name)
+
+        for media in content.media:
+            if media.id == media_id:
+                for part in media.parts:
+                    deleted_size += part.size
+                media.delete()
+
+        self.db.set_deleted_size(library_name, deleted_size)
 
     def video_to_dict(self, video: Video) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Video
