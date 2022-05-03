@@ -1,9 +1,10 @@
 import os
 
-from tinydb import TinyDB
+from tinydb import TinyDB, where
 from tinydb.table import Document
 
 DELETED_SIZE_DOC_ID = 1
+IGNORED_ITEMS_TABLE = 'ignored'
 
 
 class Database(object):
@@ -23,4 +24,17 @@ class Database(object):
                 return data[library_name]
         return 0
 
+    def get_ignored_item(self, content_key):
+        table = self.db.table(IGNORED_ITEMS_TABLE)
+        data = table.get(where('key') == content_key)
+        return data
 
+    def add_ignored_item(self, content_key):
+        table = self.db.table(IGNORED_ITEMS_TABLE)
+        table.insert({
+            'key': content_key
+        })
+
+    def remove_ignored_item(self, content_key):
+        table = self.db.table(IGNORED_ITEMS_TABLE)
+        table.remove(where('key') == content_key)

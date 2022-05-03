@@ -2,13 +2,14 @@ import {majorScale, Pane, toaster} from "evergreen-ui";
 import {autorun} from "mobx";
 import {Observer} from "mobx-react-lite";
 import React, {FunctionComponent, useCallback, useEffect, useState} from 'react';
-import {deletedMediaContext, mediaContext, movieContext} from "../stores/MediaStore";
+import {deletedMediaContext, mediaContext} from "../stores/MediaStore";
 import {Media, Content} from "../types";
 import {bytesToSize, sumMediaSize} from "../util";
 import {ContentItem} from "./ContentItem";
 import {ContentList} from "./ContentList";
 import {ContentTopBar} from "./ContentTopBar";
 import {serverInfoContext} from "../stores/ServerInfoStore";
+import {contentContext} from "../stores/ContentStore";
 
 export const ContentPage:FunctionComponent<any> = () => {
 
@@ -25,7 +26,7 @@ export const ContentPage:FunctionComponent<any> = () => {
 
   const [listingType, setListingType] = useState(listingTypes[0].value);
 
-  const movieStore = React.useContext(movieContext);
+  const contentStore = React.useContext(contentContext);
   const mediaStore = React.useContext(mediaContext);
   const deletedMediaStore = React.useContext(deletedMediaContext);
   const serverInfoStore = React.useContext(serverInfoContext);
@@ -48,7 +49,7 @@ export const ContentPage:FunctionComponent<any> = () => {
     let promises: Promise<any>[] = [];
 
     mediaStore.isDeleting = true;
-    movieStore.content.forEach(movie => {
+    contentStore.items.forEach(movie => {
       movie.media.forEach(media => {
         if (media.id in mediaStore.media) {
           promises.push(
@@ -78,9 +79,9 @@ export const ContentPage:FunctionComponent<any> = () => {
     mediaStore.reset();
     deletedMediaStore.reset();
     if (listingType === 'duplicate') {
-      movieStore.loadDupeContent();
+      contentStore.loadDupeContent();
     } else if (listingType === 'sample') {
-      movieStore.loadSampleMovies();
+      contentStore.loadSampleMovies();
     }
     serverInfoStore.loadDeletedSizes();
   };
@@ -90,7 +91,7 @@ export const ContentPage:FunctionComponent<any> = () => {
   };
 
   const onResetSelection = useCallback(() => {
-    movieStore.content.forEach((movie: Content) => {
+    contentStore.items.forEach((movie: Content) => {
       let _media = [
         ...movie.media
       ];
@@ -115,7 +116,7 @@ export const ContentPage:FunctionComponent<any> = () => {
         }
       }));
     });
-  }, [mediaStore, movieStore.content]);
+  }, [mediaStore, contentStore.items]);
 
 
   useEffect(() => {
@@ -126,7 +127,7 @@ export const ContentPage:FunctionComponent<any> = () => {
   }, [onResetSelection]);
 
   const onInvertSelection = () => {
-    movieStore.content.forEach(movie => {
+    contentStore.items.forEach(movie => {
       movie.media.forEach(media => {
         if (media.id in mediaStore.media) {
           mediaStore.removeMedia(media);
@@ -155,15 +156,37 @@ export const ContentPage:FunctionComponent<any> = () => {
     })
   }
 
+  const onIgnoreContent = (content: Content) => {
+    contentStore.ignoreContent(content.key);
+  }
+
+  const onUnIgnoreContent = (content: Content) => {
+    contentStore.unIgnoreContent(content.key);
+  }
+
+  const onChangeIncludeIgnored = (value: boolean) => {
+    contentStore.setIncludeIgnore(value);
+    if (!value) {
+      contentStore.ignoredItems.forEach(movie => {
+        movie.media.forEach(media => {
+          if (media.id in mediaStore.media) {
+            mediaStore.removeMedia(media);
+          }
+        });
+      });
+    }
+  }
+
   const renderMovieList = () => (
     <Observer>
       {() => (
         <ContentList
-          loading={movieStore.loading}
-          loadingFailed={movieStore.loadingFailed}
-          loadingError={movieStore.loadingError}
+          key={`${contentStore.length}_${contentStore.ignoredItems.length}`}
+          loading={contentStore.loading}
+          loadingFailed={contentStore.loadingFailed}
+          loadingError={contentStore.loadingError}
           listingType={listingType}
-          content={movieStore.content}
+          content={contentStore.items}
           renderContentItem={renderMovieItem}
         />
       )}
@@ -177,6 +200,8 @@ export const ContentPage:FunctionComponent<any> = () => {
           addMedia={(media: Media) => mediaStore.addMedia(media)}
           removeMedia={(media: Media) => mediaStore.removeMedia(media)}
           onDeleteMedia={onDeleteMediaItem}
+          onIgnoreContent={onIgnoreContent}
+          onUnIgnoreContent={onUnIgnoreContent}
           selectedMedia={mediaStore.media}
           deletedMedia={deletedMediaStore.media}
           content={movie}
@@ -190,9 +215,10 @@ export const ContentPage:FunctionComponent<any> = () => {
       <Observer>
         {() => (
           <ContentTopBar
-            loading={movieStore.loading}
+            loading={contentStore.loading}
             deleting={mediaStore.isDeleting}
-            numContent={movieStore.length}
+            includeIgnored={contentStore.includeIgnored}
+            numContent={contentStore.length}
             numSelected={mediaStore.length}
             totalSize={bytesToSize(mediaStore.totalSizeBytes)}
             onDeleteMedia={onDeleteMedia}
@@ -203,6 +229,7 @@ export const ContentPage:FunctionComponent<any> = () => {
             onDeselectAll={onDeselectAll}
             onResetSelection={onResetSelection}
             onInvertSelection={onInvertSelection}
+            onChangeIncludeIgnored={onChangeIncludeIgnored}
           />
         )}
       </Observer>
@@ -210,12 +237,16 @@ export const ContentPage:FunctionComponent<any> = () => {
   };
 
   return (
-    <Pane
-      border="default"
-      padding={majorScale(1)}
-    >
-      { renderTopPane() }
-      { renderMovieList() }
-    </Pane>
+      <Observer>
+        {() => (
+          <Pane
+            border="default"
+            padding={majorScale(1)}
+          >
+            { renderTopPane() }
+            { renderMovieList() }
+          </Pane>
+        )}
+      </Observer>
   )
 };

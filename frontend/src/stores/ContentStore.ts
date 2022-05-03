@@ -1,7 +1,7 @@
-import {action, computed, observable} from "mobx";
+import {action, computed, observable, runInAction} from "mobx";
 import React, {Context} from "react";
 import {Content} from "../types";
-import {getDupeContent, getSampleContent} from "../util/api";
+import {getDupeContent, getSampleContent, ignoreMedia, unIgnoreMedia} from "../util/api";
 
 export class ContentStore {
   @observable.deep
@@ -14,16 +14,37 @@ export class ContentStore {
   loadingFailed: boolean = false;
 
   @observable
-  loadingError: Error|null = null
+  loadingError: Error|null = null;
+
+  @observable
+  includeIgnored: boolean = false;
+
+  @computed
+  get items(): Content[] {
+    if (this.includeIgnored) {
+      return this.content;
+    }
+    return this.content.filter(item => !item.ignored);
+  }
+
+  @computed
+  get ignoredItems(): Content[] {
+    return this.content.filter(item => !!item.ignored);
+  }
 
   @computed
   get length(): number {
-    return this.content.length;
+    return this.items.length;
   }
 
   @action
   setContent(movies: Content[]) {
-    this.content = movies;
+    this.content = movies
+  }
+
+  @action
+  setIncludeIgnore(value: boolean) {
+    this.includeIgnored = value;
   }
 
   loadContent(handlerFn: () => Promise<any>): void {
@@ -45,6 +66,56 @@ export class ContentStore {
     });
   }
 
+  @action
+  async ignoreContent(contentKey: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      ignoreMedia(contentKey)
+          .then(() => {
+            for (let i = 0; i < this.content.length; i++) {
+              if (this.content[i].key === contentKey) {
+                const item = {
+                  ...this.content[i],
+                  ignored: true,
+                }
+                runInAction(() => {
+                  console.log(item);
+                  this.content.splice(i, 1, item);
+                });
+                break;
+              }
+            }
+            resolve();
+          }).catch((error) => {
+        reject(error);
+      });
+    })
+  }
+
+  @action
+  async unIgnoreContent(contentKey: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      unIgnoreMedia(contentKey)
+        .then(() => {
+          for (let i = 0; i < this.content.length; i++) {
+            if (this.content[i].key === contentKey) {
+              const item = {
+                ...this.content[i],
+                ignored: false,
+              }
+              runInAction(() => {
+                console.log(item);
+                this.content.splice(i, 1, item);
+              });
+              break;
+            }
+          }
+          resolve();
+        }).catch((error) => {
+        reject(error);
+      });
+    })
+  }
+
   loadDupeContent(): void {
     this.loadContent(getDupeContent);
   }
@@ -58,6 +129,8 @@ export function newContentStore(): ContentStore {
   return new ContentStore();
 }
 
-export function newMovieStoreContext(): Context<ContentStore> {
+export function newContentStoreContext(): Context<ContentStore> {
   return React.createContext<ContentStore>(newContentStore());
 }
+
+export const contentContext = newContentStoreContext();

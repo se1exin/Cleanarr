@@ -3,7 +3,6 @@ import React, {Context} from "react";
 import {Media} from "../types";
 import {sumMediaSize} from "../util";
 import {deleteMedia} from "../util/api";
-import {newMovieStoreContext} from "./ContentStore";
 
 export class MediaStore {
   @observable.deep
@@ -61,6 +60,5 @@ export function newMediaStoreContext(): Context<MediaStore> {
   return React.createContext<MediaStore>(newMediaStore());
 }
 
-export const movieContext = newMovieStoreContext();
 export const mediaContext = newMediaStoreContext();
 export const deletedMediaContext = newMediaStoreContext();

@@ -9,6 +9,8 @@ type DupeMovieProps = {
   addMedia: Function,
   removeMedia: Function,
   onDeleteMedia: Function,
+  onIgnoreContent: Function,
+  onUnIgnoreContent: Function,
   selectedMedia: Record<number, Media>,
   deletedMedia: Record<number, Media>,
   content: Content
@@ -22,11 +24,15 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
     selectedMedia,
     deletedMedia,
     onDeleteMedia,
+    onIgnoreContent,
+    onUnIgnoreContent,
     content
   } = props;
 
 
   const [mediaItemToDelete, setMediaItemToDelete] = useState<Media | null>(null);
+  const [contentToIgnore, setContentToIgnore] = useState<Content | null>(null);
+  const [contentToUnIgnore, setContentToUnIgnore] = useState<Content | null>(null);
 
   const onClickConfirmDelete = () => {
     onDeleteMedia(content, mediaItemToDelete);
@@ -43,6 +49,16 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
 
   const onClickServerLink = () => {
     window.open(content.url, '_blank');
+  }
+
+  const onClickIgnoreConfirm = () => {
+    onIgnoreContent(content);
+    setContentToIgnore(null);
+  }
+
+  const onClickUnIgnoreConfirm = () => {
+    onUnIgnoreContent(content);
+    setContentToUnIgnore(null);
   }
 
   return (
@@ -65,6 +81,19 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
             { `${content.library}` }
           </Heading>
         </Pane>
+        {content.ignored ? (
+            <Button onClick={() => setContentToUnIgnore(content)}
+                    intent="warning"
+                    appearance={"primary"}
+                    marginRight={10}>
+              Remove From Ignored
+            </Button>
+        ) : (
+            <Button onClick={() => setContentToIgnore(content)} marginRight={10}>
+              Ignore
+            </Button>
+        )}
+
         <Button onClick={onClickServerLink}>
           Open in Plex
           <Icon icon={"share"} size={10} marginLeft={majorScale(1)} />
@@ -134,19 +163,40 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
         </Table.Body>
       </Table>
     </Card>
-        <Dialog
-          isShown={mediaItemToDelete !== null}
+    <Dialog
+      isShown={mediaItemToDelete !== null}
+      title="Warning"
+      intent="danger"
+      confirmLabel={`Delete Item`}
+      onConfirm={onClickConfirmDelete}
+      onCloseComplete={() => setMediaItemToDelete(null)}
+    >
+      Are you sure you want to delete the following file for <b>{content.title}</b>?
+      { mediaItemToDelete && mediaItemToDelete!.parts.map((part: MediaPart, index: number) => (
+        <pre style={{whiteSpace: "normal"}} key={index}>{ part.file }</pre>
+      ))}
+    </Dialog>
+    <Dialog
+        isShown={contentToIgnore !== null}
+        title="Warning"
+        intent="danger"
+        confirmLabel={`Ignore Item`}
+        onConfirm={onClickIgnoreConfirm}
+        onCloseComplete={() => setContentToIgnore(null)}
+    >
+      Are you sure you want to ignore all files for <b>{content.title}</b>?
+    </Dialog>
+
+      <Dialog
+          isShown={contentToUnIgnore !== null}
           title="Warning"
           intent="danger"
-          confirmLabel={`Delete Item`}
-          onConfirm={onClickConfirmDelete}
-          onCloseComplete={() => setMediaItemToDelete(null)}
-        >
-          Are you sure you want to delete the following file for <b>{content.title}</b>?
-          { mediaItemToDelete && mediaItemToDelete!.parts.map((part: MediaPart, index: number) => (
-            <pre style={{whiteSpace: "normal"}} key={index}>{ part.file }</pre>
-          ))}
-        </Dialog>
+          confirmLabel={`Remove from Ignored`}
+          onConfirm={onClickUnIgnoreConfirm}
+          onCloseComplete={() => setContentToUnIgnore(null)}
+      >
+        Are you sure you want to stop ignoring all files for <b>{content.title}</b>?
+      </Dialog>
     </>
   )
 };

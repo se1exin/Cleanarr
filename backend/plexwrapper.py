@@ -113,7 +113,9 @@ class PlexWrapper(object):
 
     def video_to_dict(self, video: Video) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Video
+        ignored = self.db.get_ignored_item(video.key)
         return {
+            "ignored": ignored is not None,
             "addedAt": str(video.addedAt),
             "key": video.key,
             "lastViewedAt": str(video.lastViewedAt),

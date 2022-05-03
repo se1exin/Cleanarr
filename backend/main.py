@@ -5,6 +5,7 @@ import requests as requests
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
+from database import Database
 from plexwrapper import PlexWrapper
 
 app = Flask(__name__)
@@ -58,6 +59,28 @@ def delete_media():
     media_id = content["media_id"]
 
     PlexWrapper().delete_media(library_name, content_key, media_id)
+
+    return jsonify({"success": True})
+
+
+@app.route("/content/ignore", methods=["POST"])
+def add_ignored_item():
+    content = request.get_json()
+    content_key = content["content_key"]
+
+    db = Database()
+    db.add_ignored_item(content_key)
+
+    return jsonify({"success": True})
+
+
+@app.route("/content/unignore", methods=["POST"])
+def remove_ignored_item():
+    content = request.get_json()
+    content_key = content["content_key"]
+
+    db = Database()
+    db.remove_ignored_item(content_key)
 
     return jsonify({"success": True})
 
