@@ -1,7 +1,7 @@
 import {action, computed, observable} from "mobx";
 import React, {Context} from "react";
 import {Content} from "../types";
-import {getDupeContent, getSampleContent} from "../util/api";
+import {getDupeContent, getSampleContent, ignoreMedia} from "../util/api";
 
 export class ContentStore {
   @observable.deep
@@ -44,6 +44,18 @@ export class ContentStore {
       }
     });
   }
+
+  ignoreContent(contentKey: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      ignoreMedia(contentKey)
+          .then(() => {
+            resolve();
+          }).catch((error) => {
+        reject(error);
+      });
+    })
+  }
+
 
   loadDupeContent(): void {
     this.loadContent(getDupeContent);

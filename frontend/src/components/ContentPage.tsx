@@ -155,6 +155,10 @@ export const ContentPage:FunctionComponent<any> = () => {
     })
   }
 
+  const onIgnoreContent = (content: Content) => {
+    movieStore.ignoreContent(content.key);
+  }
+
   const renderMovieList = () => (
     <Observer>
       {() => (
@@ -177,6 +181,7 @@ export const ContentPage:FunctionComponent<any> = () => {
           addMedia={(media: Media) => mediaStore.addMedia(media)}
           removeMedia={(media: Media) => mediaStore.removeMedia(media)}
           onDeleteMedia={onDeleteMediaItem}
+          onIgnoreContent={onIgnoreContent}
           selectedMedia={mediaStore.media}
           deletedMedia={deletedMediaStore.media}
           content={movie}

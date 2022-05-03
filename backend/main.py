@@ -5,6 +5,7 @@ import requests as requests
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
+from database import Database
 from plexwrapper import PlexWrapper
 
 app = Flask(__name__)
@@ -61,6 +62,16 @@ def delete_media():
 
     return jsonify({"success": True})
 
+
+@app.route("/content/ignore", methods=["POST"])
+def add_ignored_item():
+    content = request.get_json()
+    content_key = content["content_key"]
+
+    db = Database()
+    db.add_ignored_item(content_key)
+
+    return jsonify({"success": True})
 
 # Static File Hosting Hack
 # See https://github.com/tiangolo/uwsgi-nginx-flask-docker/blob/master/deprecated-single-page-apps-in-same-container.md

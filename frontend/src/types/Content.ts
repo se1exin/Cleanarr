@@ -29,4 +29,5 @@ export interface Content {
   media: Media[],
   library: string,
   url: string,
+  ignored: boolean,
 }

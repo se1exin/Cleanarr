@@ -43,6 +43,7 @@ class PlexWrapper(object):
 
     def get_dupe_content(self):
         dupes = []
+        ignored = self.db.get_ignored_items()
         for section in self._get_sections():
             if section.type == "movie":
                 # Recursively search movies
@@ -57,7 +58,10 @@ class PlexWrapper(object):
                         offset += self.page_size
                         for movie in results:
                             if len(movie.media) > 1:
-                                dupes.append(self.movie_to_dict(movie, section.title))
+                                item = self.movie_to_dict(movie, section.title)
+                                if item['key'] in ignored:
+                                    item['ignored'] = True
+                                dupes.append(item)
 
             if section.type == "show":
                 # Recursively search TV
@@ -72,7 +76,10 @@ class PlexWrapper(object):
                         offset += self.page_size
                         for episode in results:
                             if len(episode.media) > 1:
-                                dupes.append(self.episode_to_dict(episode, section.title))
+                                item = self.episode_to_dict(episode, section.title)
+                                if item['key'] in ignored:
+                                    item['ignored'] = True
+                                dupes.append(item)
         return dupes
 
     def get_content_sample_files(self):
@@ -114,6 +121,7 @@ class PlexWrapper(object):
     def video_to_dict(self, video: Video) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Video
         return {
+            "ignored": False,
             "addedAt": str(video.addedAt),
             "key": video.key,
             "lastViewedAt": str(video.lastViewedAt),

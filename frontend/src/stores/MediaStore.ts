@@ -2,7 +2,7 @@ import {action, computed, observable} from 'mobx';
 import React, {Context} from "react";
 import {Media} from "../types";
 import {sumMediaSize} from "../util";
-import {deleteMedia} from "../util/api";
+import {deleteMedia, ignoreMedia} from "../util/api";
 import {newMovieStoreContext} from "./ContentStore";
 
 export class MediaStore {
