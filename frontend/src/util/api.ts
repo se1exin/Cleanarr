@@ -12,6 +12,7 @@ const DUPES_URL = `${BACKEND_URL}content/dupes`;
 const SAMPLES_URL = `${BACKEND_URL}content/samples`;
 const DELETE_MEDIA_URL = `${BACKEND_URL}delete/media`;
 const IGNORE_MEDIA_URL = `${BACKEND_URL}content/ignore`;
+const UNIGNORE_MEDIA_URL = `${BACKEND_URL}content/unignore`;
 
 export const getServerInfo = (): Promise<any> => {
   return axios.get(INFO_URL);
@@ -39,6 +40,12 @@ export const deleteMedia = (library: string, contentKey: string, mediaId: number
 
 export const ignoreMedia = (contentKey: string): Promise<any> => {
   return axios.post(IGNORE_MEDIA_URL, {
+    'content_key': contentKey
+  })
+};
+
+export const unIgnoreMedia = (contentKey: string): Promise<any> => {
+  return axios.post(UNIGNORE_MEDIA_URL, {
     'content_key': contentKey
   })
 };

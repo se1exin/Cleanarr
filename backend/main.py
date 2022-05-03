@@ -73,6 +73,18 @@ def add_ignored_item():
 
     return jsonify({"success": True})
 
+
+@app.route("/content/unignore", methods=["POST"])
+def remove_ignored_item():
+    content = request.get_json()
+    content_key = content["content_key"]
+
+    db = Database()
+    db.remove_ignored_item(content_key)
+
+    return jsonify({"success": True})
+
+
 # Static File Hosting Hack
 # See https://github.com/tiangolo/uwsgi-nginx-flask-docker/blob/master/deprecated-single-page-apps-in-same-container.md
 @app.route("/")

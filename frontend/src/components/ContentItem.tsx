@@ -10,6 +10,7 @@ type DupeMovieProps = {
   removeMedia: Function,
   onDeleteMedia: Function,
   onIgnoreContent: Function,
+  onUnIgnoreContent: Function,
   selectedMedia: Record<number, Media>,
   deletedMedia: Record<number, Media>,
   content: Content
@@ -24,12 +25,14 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
     deletedMedia,
     onDeleteMedia,
     onIgnoreContent,
+    onUnIgnoreContent,
     content
   } = props;
 
 
   const [mediaItemToDelete, setMediaItemToDelete] = useState<Media | null>(null);
   const [contentToIgnore, setContentToIgnore] = useState<Content | null>(null);
+  const [contentToUnIgnore, setContentToUnIgnore] = useState<Content | null>(null);
 
   const onClickConfirmDelete = () => {
     onDeleteMedia(content, mediaItemToDelete);
@@ -53,6 +56,11 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
     setContentToIgnore(null);
   }
 
+  const onClickUnIgnoreConfirm = () => {
+    onUnIgnoreContent(content);
+    setContentToUnIgnore(null);
+  }
+
   return (
     <>
     <Card
@@ -73,9 +81,18 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
             { `${content.library}` }
           </Heading>
         </Pane>
-        <Button onClick={() => setContentToIgnore(content)} marginRight={20}>
-          Ignore item
-        </Button>
+        {content.ignored ? (
+            <Button onClick={() => setContentToUnIgnore(content)}
+                    intent="warning"
+                    appearance={"primary"}
+                    marginRight={10}>
+              Remove From Ignored
+            </Button>
+        ) : (
+            <Button onClick={() => setContentToIgnore(content)} marginRight={10}>
+              Ignore
+            </Button>
+        )}
 
         <Button onClick={onClickServerLink}>
           Open in Plex
@@ -169,6 +186,17 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
     >
       Are you sure you want to ignore all files for <b>{content.title}</b>?
     </Dialog>
+
+      <Dialog
+          isShown={contentToUnIgnore !== null}
+          title="Warning"
+          intent="danger"
+          confirmLabel={`Remove from Ignored`}
+          onConfirm={onClickUnIgnoreConfirm}
+          onCloseComplete={() => setContentToUnIgnore(null)}
+      >
+        Are you sure you want to stop ignoring all files for <b>{content.title}</b>?
+      </Dialog>
     </>
   )
 };
