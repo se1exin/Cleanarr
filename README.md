@@ -26,6 +26,7 @@ You will need to set the correct parameters for your setup:
 | `-e BYPASS_SSL_VERIFY=1` | (**optional**) Disable SSL certificate verification. Use this if your Plex Server has "Secure Connections: Required" and you are having issues connecting to it. (Thanks [@booksarestillbetter - #2](https://github.com/se1exin/cleanarr/issues/2)) |
 | `-p 5000:80` | (**required**) Expose the UI via the selected port (in this case `5000`). Change `5000` to the port of your choosing, but don't change the number `80`. |
 | `-e PAGE_SIZE=50` | (**optional**) To avoid plex timeouts, results are loaded in pages (or chunks). If you recieve Plex Timeout errors, try setting this parameter to a lower value. |
+| `-e DEBUG=0` | (**optional**) To enable debug logging set `DEBUG` to `1` |
 
 
 #### Example running directly with docker

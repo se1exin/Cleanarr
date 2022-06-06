@@ -7,7 +7,9 @@ from plexapi.server import PlexServer
 from plexapi.video import Movie, Video, Episode
 
 from database import Database
+from logger import get_logger
 
+logger = get_logger(__name__)
 
 class PlexWrapper(object):
     def __init__(self):
@@ -21,10 +23,20 @@ class PlexWrapper(object):
             if x.strip() != ""
         ]
 
+        logger.debug("PlexWrapper Init")
+        logger.debug("PLEX_BASE_URL %s", self.baseurl)
+        logger.debug("LIBRARY_NAMES %s", self.libraries)
+
         session = requests.Session()
         session.verify = verify_ssl
+        logger.debug("Connecting to Plex...")
         self.plex = PlexServer(self.baseurl, token, session=session, timeout=(60 * 60))
+        logger.debug("Connected to Plex!")
+
+        logger.debug("Initializing DB...")
         self.db = Database()
+        logger.debug("Initialized DB!")
+
 
     def _get_sections(self):
         return [self.plex.library.section(title=library) for library in self.libraries]
@@ -42,14 +54,18 @@ class PlexWrapper(object):
         }
 
     def get_dupe_content(self):
+        logger.debug("START")
         dupes = []
         for section in self._get_sections():
+            logger.debug("SECTION: %s", section.title)
             if section.type == "movie":
+                logger.debug("Section type is MOVIE")
                 # Recursively search movies
                 offset = 0
                 end = False
                 while not end:
                     limit = offset + self.page_size
+                    logger.debug("Get results from offset %s to limit %s", offset, limit)
                     results = section.search(duplicate=True, libtype='movie', container_start=offset, limit=limit)
                     if len(results) == 0:
                         end = True
@@ -57,14 +73,17 @@ class PlexWrapper(object):
                         offset += self.page_size
                         for movie in results:
                             if len(movie.media) > 1:
+                                logger.debug("Found media: %s", movie.guid)
                                 dupes.append(self.movie_to_dict(movie, section.title))
 
             if section.type == "show":
+                logger.debug("Section type is SHOW")
                 # Recursively search TV
                 offset = 0
                 end = False
                 while not end:
                     limit = offset + self.page_size
+                    logger.debug("Get results from offset %s to limit %s", offset, limit)
                     results = section.search(duplicate=True, libtype='episode', container_start=offset, limit=limit)
                     if len(results) == 0:
                         end = True
@@ -72,6 +91,7 @@ class PlexWrapper(object):
                         offset += self.page_size
                         for episode in results:
                             if len(episode.media) > 1:
+                                logger.debug("Found media: %s", movie.guid)
                                 dupes.append(self.episode_to_dict(episode, section.title))
         return dupes
 

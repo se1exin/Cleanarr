@@ -6,14 +6,18 @@ from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 
 from database import Database
+from logger import get_logger
 from plexwrapper import PlexWrapper
 
 app = Flask(__name__)
 CORS(app)
 
+logger = get_logger(__name__)
+
 
 @app.errorhandler(Exception)
 def internal_error(error):
+    logger.error(error)
     return jsonify({"error": str(error)}), 500
 
 
