@@ -71,7 +71,7 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
         padding={majorScale(1)}
         alignItems="center" display="flex"
       >
-        <Image src={`${BACKEND_URL}server/proxy?url=${encodeURIComponent(content.thumbUrl)}`} width={50} height={"auto"} marginRight={majorScale(2)} />
+        <Image src={`${BACKEND_URL}server/thumbnail?content_key=${encodeURIComponent(content.key)}`} width={50} height={"auto"} marginRight={majorScale(2)} />
         <Pane flex={1}>
           <Heading>
             { content.contentType === 'movie'  && `${content.title } (${content.year})` }

@@ -1,5 +1,6 @@
 import io
 import os
+import urllib
 
 import requests as requests
 from flask import Flask, jsonify, request, send_file
@@ -36,6 +37,15 @@ def get_server_proxy():
     r = requests.get(url)
     return send_file(io.BytesIO(r.content), mimetype='image/jpeg')
 
+@app.route("/server/thumbnail")
+def get_server_thumbnail():
+    # Proxy a request to the server - useful when the user
+    # is viewing the cleanarr dash over HTTPS to avoid the browser
+    # blocking untrusted server certs
+    content_key = urllib.parse.unquote(request.args.get('content_key'))
+    url = PlexWrapper().get_thumbnail_url(content_key)
+    r = requests.get(url)
+    return send_file(io.BytesIO(r.content), mimetype='image/jpeg')
 
 @app.route("/content/dupes")
 def get_dupes():

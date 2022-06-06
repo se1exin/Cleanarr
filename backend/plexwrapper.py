@@ -187,6 +187,13 @@ class PlexWrapper(object):
             "media": [self.media_to_dict(media) for media in episode.media],
         }
 
+    def get_thumbnail_url(self, content_key):
+        item = self.get_content(content_key)
+        if item is not None:
+            return item.thumbUrl
+        else:
+            return "";
+
     @classmethod
     def media_to_dict(cls, media: Media) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/media.html#plexapi.media.Media
