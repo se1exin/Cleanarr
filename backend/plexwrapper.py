@@ -91,7 +91,7 @@ class PlexWrapper(object):
                         offset += self.page_size
                         for episode in results:
                             if len(episode.media) > 1:
-                                logger.debug("Found media: %s", movie.guid)
+                                logger.debug("Found media: %s", episode.guid)
                                 dupes.append(self.episode_to_dict(episode, section.title))
         return dupes
 
