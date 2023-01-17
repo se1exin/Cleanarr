@@ -22,7 +22,8 @@ class PlexWrapper(object):
             for x in os.environ.get("LIBRARY_NAMES", "Movies").split(";")
             if x.strip() != ""
         ]
-
+        timeout = int(os.environ.get("PLEX_TIMEOUT",60*60)) # added line
+        
         logger.debug("PlexWrapper Init")
         logger.debug("PLEX_BASE_URL %s", self.baseurl)
         logger.debug("LIBRARY_NAMES %s", self.libraries)
@@ -30,7 +31,7 @@ class PlexWrapper(object):
         session = requests.Session()
         session.verify = verify_ssl
         logger.debug("Connecting to Plex...")
-        self.plex = PlexServer(self.baseurl, token, session=session, timeout=(60 * 60))
+        self.plex = PlexServer(self.baseurl, token, session=session, timeout=timeout)
         logger.debug("Connected to Plex!")
 
         logger.debug("Initializing DB...")
