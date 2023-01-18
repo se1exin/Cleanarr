@@ -27,6 +27,7 @@ You will need to set the correct parameters for your setup:
 | `-p 5000:80` | (**required**) Expose the UI via the selected port (in this case `5000`). Change `5000` to the port of your choosing, but don't change the number `80`. |
 | `-e PAGE_SIZE=50` | (**optional**) To avoid plex timeouts, results are loaded in pages (or chunks). If you recieve Plex Timeout errors, try setting this parameter to a lower value. |
 | `-e DEBUG=0` | (**optional**) To enable debug logging set `DEBUG` to `1` |
+| `-e PLEX_TIMEOUT=7200` | (**optional**) modify the timeout for wrapper (Error : Failed to load content!) |
 
 
 #### Example running directly with docker
@@ -98,11 +99,15 @@ pip install -r requirements.txt
 
 Run the Backend:
 ```
-PLEX_BASE_URL="plex_address" PLEX_TOKEN="somerandomstring" LIBRARY_NAMES="Movies" FLASK_APP=main python -m flask run
+PLEX_BASE_URL="plex_address" PLEX_TOKEN="somerandomstring" LIBRARY_NAMES="Movies" PLEX_TIMEOUT="7200" FLASK_APP=main python -m flask run
 ```
 
 The backend will start and run from port `5000` on `localhost` (e.g. [http:localhost:5000](http:localhost:5000)).
 
+If you are running on a remote server :
+```
+PLEX_BASE_URL="http://plex_address:32400" PLEX_TOKEN="somerandomstring" LIBRARY_NAMES="Movies" FLASK_APP=main python -m flask run --host=IP.remote.server
+```
 See [Flask's Docs for more run options (such as chaning the port)](https://flask.palletsprojects.com/en/1.1.x/cli/).
 
 ## Frontend
@@ -127,6 +132,7 @@ REACT_APP_BACKEND_URL="http://localhost:5000/" yarn start
 ```
 
 The frontend will now be available in your browser at [http:localhost:3000](http:localhost:3000).
+
 
 ## Screenshots
 
