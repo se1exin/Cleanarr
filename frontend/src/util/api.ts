@@ -22,8 +22,8 @@ export const getDeletedSizes = (): Promise<any> => {
   return axios.get(DELETED_SIZES);
 };
 
-export const getDupeContent = (): Promise<any> => {
-  return axios.get(DUPES_URL);
+export const getDupeContent = (page: number = 1): Promise<any> => {
+  return axios.get(`${DUPES_URL}?page=${page}`);
 };
 
 export const getSampleContent = (): Promise<any> => {

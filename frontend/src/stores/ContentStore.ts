@@ -3,6 +3,8 @@ import React, {Context} from "react";
 import {Content} from "../types";
 import {getDupeContent, getSampleContent, ignoreMedia, unIgnoreMedia} from "../util/api";
 
+export const PAGE_SIZE: number = Number(process.env.REACT_APP_PAGE_SIZE) || 10;
+
 export class ContentStore {
   @observable.deep
   content: Content[] = [];
@@ -117,7 +119,47 @@ export class ContentStore {
   }
 
   loadDupeContent(): void {
-    this.loadContent(getDupeContent);
+    // iterates over the dupes endpoint until there is no data returned
+    this.loading = true;
+    this.loadingFailed = false;
+    this.loadingError = null;
+    this.setContent([]);
+
+    let page: number = 1;
+    let pageSize: number = PAGE_SIZE;
+    let combinedData: Array<any> = [];
+
+    // make PAGE_SIZE requests in parallel
+    const fetchData = async () => {
+      const requests = [];
+      for (let i = 0; i < pageSize; i++) {
+        requests.push(getDupeContent(page + i));
+      }
+      const results = await Promise.all(requests);
+      let anyPagesEmpty = false;
+      results.forEach((result) => {
+        combinedData = combinedData.concat(result.data);
+        if (result.data.length == 0) {
+          anyPagesEmpty = true;
+        }
+      });
+      if (anyPagesEmpty) {
+        // assume that we have reached the end of the data as ?page=N returns an empty array
+        this.setContent(combinedData);
+        this.loading = false;
+      } else {
+        page += pageSize;
+        fetchData();
+      }
+    };
+
+    fetchData().catch((error) => {
+      this.loading = false;
+      this.loadingFailed = true;
+      if (error.response?.data?.error) {
+        this.loadingError = new Error(error.response?.data?.error);
+      }
+    });
   }
 
   loadSampleMovies(): void {

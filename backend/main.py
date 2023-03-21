@@ -49,7 +49,8 @@ def get_server_thumbnail():
 
 @app.route("/content/dupes")
 def get_dupes():
-    dupes = PlexWrapper().get_dupe_content()
+    page = int(request.args.get("page", 1))
+    dupes = PlexWrapper().get_dupe_content(page)
     return jsonify(dupes)
 
 
