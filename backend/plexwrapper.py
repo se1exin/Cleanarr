@@ -54,7 +54,7 @@ class PlexWrapper(object):
             'url': self.baseurl + '/web/index.html'
         }
 
-    def get_dupe_content(self):
+    def get_dupe_content(self, page=1):
         logger.debug("START")
         dupes = []
         for section in self._get_sections():
@@ -62,38 +62,31 @@ class PlexWrapper(object):
             if section.type == "movie":
                 logger.debug("Section type is MOVIE")
                 # Recursively search movies
-                offset = 0
-                end = False
-                while not end:
-                    limit = offset + self.page_size
-                    logger.debug("Get results from offset %s to limit %s", offset, limit)
-                    results = section.search(duplicate=True, libtype='movie', container_start=offset, limit=limit)
-                    if len(results) == 0:
-                        end = True
-                    else:
-                        offset += self.page_size
-                        for movie in results:
-                            if len(movie.media) > 1:
-                                logger.debug("Found media: %s", movie.guid)
-                                dupes.append(self.movie_to_dict(movie, section.title))
-
-            if section.type == "show":
+                offset = (page - 1) * self.page_size
+                limit = offset + self.page_size
+                logger.debug("Get results from offset %s to limit %s", offset, limit)
+                results = section.search(duplicate=True, libtype='movie', container_start=offset, limit=limit)
+                if len(results) == 0:
+                    continue
+                else:
+                    for movie in results:
+                        if len(movie.media) > 1:
+                            logger.debug("Found media: %s", movie.guid)
+                            dupes.append(self.movie_to_dict(movie, section.title))
+            elif section.type == "show":
                 logger.debug("Section type is SHOW")
                 # Recursively search TV
-                offset = 0
-                end = False
-                while not end:
-                    limit = offset + self.page_size
-                    logger.debug("Get results from offset %s to limit %s", offset, limit)
-                    results = section.search(duplicate=True, libtype='episode', container_start=offset, limit=limit)
-                    if len(results) == 0:
-                        end = True
-                    else:
-                        offset += self.page_size
-                        for episode in results:
-                            if len(episode.media) > 1:
-                                logger.debug("Found media: %s", episode.guid)
-                                dupes.append(self.episode_to_dict(episode, section.title))
+                offset = (page - 1) * self.page_size
+                limit = offset + self.page_size
+                logger.debug("Get results from offset %s to limit %s", offset, limit)
+                results = section.search(duplicate=True, libtype='episode', container_start=offset, limit=limit)
+                if len(results) == 0:
+                    continue
+                else:
+                    for episode in results:
+                        if len(episode.media) > 1:
+                            logger.debug("Found media: %s", episode.guid)
+                            dupes.append(self.episode_to_dict(episode, section.title))
         return dupes
 
     def get_content_sample_files(self):
