@@ -9,7 +9,7 @@ ENV REACT_APP_BACKEND_URL="/"
 RUN yarn install && yarn build
 
 
-FROM tiangolo/uwsgi-nginx-flask:python3.7
+FROM tiangolo/uwsgi-nginx-flask:python3.8
 
 ENV STATIC_INDEX 1
 ENV CONFIG_DIR "/config"
