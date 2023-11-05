@@ -14,4 +14,4 @@ tinydb==4.7.0
 tqdm==4.42.0
 urllib3==1.26.5
 websocket-client==0.57.0
-Werkzeug==2.2.3
+Werkzeug==3.0.1
