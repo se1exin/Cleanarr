@@ -103,6 +103,7 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
         <Table.Head>
           <Table.TextHeaderCell flexBasis={50} flexShrink={0} flexGrow={0} />
           <Table.TextHeaderCell>File Size</Table.TextHeaderCell>
+          <Table.TextHeaderCell>Runtime</Table.TextHeaderCell>
           <Table.TextHeaderCell>Video Size</Table.TextHeaderCell>
           <Table.TextHeaderCell>Resolution</Table.TextHeaderCell>
           <Table.TextHeaderCell>Frame Rate</Table.TextHeaderCell>
@@ -133,6 +134,9 @@ export const ContentItem:FunctionComponent<DupeMovieProps> = (props) => {
                   </Table.TextCell>
                   <Table.TextCell>
                     {bytesToSize(sumMediaSize(media))}
+                  </Table.TextCell>
+                  <Table.TextCell>
+                    {media.duration}
                   </Table.TextCell>
                   <Table.TextCell>
                     {(media.width) ? (`${media.width} x ${media.height}`) : '-'}
