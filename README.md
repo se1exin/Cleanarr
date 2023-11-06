@@ -29,9 +29,26 @@ You will need to set the correct parameters for your setup:
 | `-e DEBUG=0` | (**optional**) To enable debug logging set `DEBUG` to `1` |
 | `-e PLEX_TIMEOUT=7200` | (**optional**) modify the timeout for wrapper (Error : Failed to load content!) |
 
+#### Example running directly with docker (with make)
 
-#### Example running directly with docker
+##### build
+
+```shell
+make build # this will create an .env file if it doesn't already exist
+# edit .env file
 ```
+
+##### run
+
+```shell
+# set CONFIG_MOUNT to a location on your machine where you wish to store the state from Cleanarr
+CONFIG_MOUNT=/tmp/config make run
+```
+
+#### Example running directly with docker (manually)
+```shell
+# you can build and run manually
+docker build -t=selexin/cleanarr:latest .
 docker run \
 	-e PLEX_BASE_URL="http://192.169.1.100:32400" \
 	-e PLEX_TOKEN="somerandomstring" \
@@ -39,6 +56,7 @@ docker run \
 	-p 5000:80 \
   -v /some/path/on/your/computer:/config \
 	selexin/cleanarr:latest
+	
 ```
 
 #### Example using Docker Compose
