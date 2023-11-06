@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 from plexapi.media import Media, MediaPart, MediaPartStream
@@ -57,36 +58,36 @@ class PlexWrapper(object):
     def get_dupe_content(self, page=1):
         logger.debug("START")
         dupes = []
-        for section in self._get_sections():
-            logger.debug("SECTION: %s", section.title)
-            if section.type == "movie":
-                logger.debug("Section type is MOVIE")
-                # Recursively search movies
-                offset = (page - 1) * self.page_size
-                limit = offset + self.page_size
-                logger.debug("Get results from offset %s to limit %s", offset, limit)
-                results = section.search(duplicate=True, libtype='movie', container_start=offset, limit=limit)
-                if len(results) == 0:
-                    continue
-                else:
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for section in self._get_sections():
+                logger.debug("SECTION: %s", section.title)
+                if section.type == "movie":
+                    logger.debug("Section type is MOVIE")
+                    # Recursively search movies
+                    offset = (page - 1) * self.page_size
+                    limit = offset + self.page_size
+                    logger.debug("Get results from offset %s to limit %s", offset, limit)
+                    results = section.search(duplicate=True, libtype='movie', container_start=offset, limit=limit)
                     for movie in results:
                         if len(movie.media) > 1:
-                            logger.debug("Found media: %s", movie.guid)
-                            dupes.append(self.movie_to_dict(movie, section.title))
-            elif section.type == "show":
-                logger.debug("Section type is SHOW")
-                # Recursively search TV
-                offset = (page - 1) * self.page_size
-                limit = offset + self.page_size
-                logger.debug("Get results from offset %s to limit %s", offset, limit)
-                results = section.search(duplicate=True, libtype='episode', container_start=offset, limit=limit)
-                if len(results) == 0:
-                    continue
-                else:
+                            future = executor.submit(self.movie_to_dict, movie, section.title)
+                            futures.append(future)
+                elif section.type == "show":
+                    logger.debug("Section type is SHOW")
+                    # Recursively search TV
+                    offset = (page - 1) * self.page_size
+                    limit = offset + self.page_size
+                    logger.debug("Get results from offset %s to limit %s", offset, limit)
+                    results = section.search(duplicate=True, libtype='episode', container_start=offset, limit=limit)
                     for episode in results:
                         if len(episode.media) > 1:
-                            logger.debug("Found media: %s", episode.guid)
-                            dupes.append(self.episode_to_dict(episode, section.title))
+                            future = executor.submit(self.episode_to_dict, episode, section.title)
+                            futures.append(future)
+
+            for future in as_completed(futures):
+                dupes.append(future.result())
+
         return dupes
 
     def get_content_sample_files(self):

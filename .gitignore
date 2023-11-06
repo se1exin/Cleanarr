@@ -1,3 +1,5 @@
-.idea
+gidea
 .env
+.idea
+venv
 backend/db.json
