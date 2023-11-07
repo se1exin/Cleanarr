@@ -129,58 +129,92 @@ class PlexWrapper(object):
     def video_to_dict(self, video: Video) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Video
         ignored = self.db.get_ignored_item(video.key)
-        return {
+        results = {
             "ignored": ignored is not None,
-            "addedAt": str(video.addedAt),
-            "key": video.key,
-            "lastViewedAt": str(video.lastViewedAt),
-            "librarySectionID": video.librarySectionID,
-            "summary": video.summary,
-            "thumbUrl": video.thumbUrl,
-            "title": video.title,
-            "titleSort": video.titleSort,
-            "type": video.type,
-            "updatedAt": str(video.updatedAt),
-            "viewCount": str(video.viewCount),
-            "url": self.baseurl + '/web/index.html#!/server/' + self.plex.machineIdentifier + '/details?key=' + urllib.parse.quote_plus(video.key)
         }
+        attributes_to_fetch = {
+            "addedAt": lambda: str(video.addedAt),
+            "key": lambda: video.key,
+            "lastViewedAt": lambda: str(video.lastViewedAt),
+            "librarySectionID": lambda: video.librarySectionID,
+            "summary": lambda: video.summary,
+            "thumbUrl": lambda: video.thumbUrl,
+            "title": lambda: video.title,
+            "titleSort": lambda: video.titleSort,
+            "type": lambda: video.type,
+            "updatedAt": lambda: str(video.updatedAt),
+            "viewCount": lambda: str(video.viewCount),
+            "url": lambda: self.baseurl + '/web/index.html#!/server/' + self.plex.machineIdentifier + '/details?key=' + urllib.parse.quote_plus(video.key)
+        }
+        with ThreadPoolExecutor(max_workers=len(attributes_to_fetch)) as executor:
+            future_to_attr = {executor.submit(self.fetch_attribute, func): attr for attr, func in attributes_to_fetch.items()}
+            for future in as_completed(future_to_attr):
+                attr = future_to_attr[future]
+                results[attr] = future.result()
+        return results
+
+
+    @staticmethod
+    def fetch_attribute(func, *args, **kwargs):
+        try:
+            return func()
+        except Exception as e:
+            logger.error(f"Error fetching attribute: {e}")
 
     def movie_to_dict(self, movie: Movie, library: str) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
-        return {
+        attributes_to_fetch = {
+            "duration": lambda: movie.duration,
+            "guid": lambda: movie.guid,
+            "originalTitle": lambda: movie.originalTitle,
+            "originallyAvailableAt": lambda: str(movie.originallyAvailableAt),
+            "rating": lambda: movie.rating,
+            "ratingImage": lambda: movie.ratingImage,
+            "studio": lambda: movie.studio,
+            "tagline": lambda: movie.tagline,
+            "userRating": lambda: movie.userRating,
+            "year": lambda: movie.year,
+            "media": lambda: [self.media_to_dict(media) for media in movie.media],
+        }
+        results = {
             **self.video_to_dict(movie),
             "contentType": 'movie',
             "library": library,
-            "duration": movie.duration,
-            "guid": movie.guid,
-            "originalTitle": movie.originalTitle,
-            "originallyAvailableAt": str(movie.originallyAvailableAt),
-            "rating": movie.rating,
-            "ratingImage": movie.ratingImage,
-            "studio": movie.studio,
-            "tagline": movie.tagline,
-            "userRating": movie.userRating,
-            "year": movie.year,
-            "media": [self.media_to_dict(media) for media in movie.media],
         }
+        with ThreadPoolExecutor(max_workers=len(attributes_to_fetch)) as executor:
+            future_to_attr = {executor.submit(self.fetch_attribute, func): attr for attr, func in attributes_to_fetch.items()}
+            for future in as_completed(future_to_attr):
+                attr = future_to_attr[future]
+                results[attr] = future.result()
+
+        return results
 
     def episode_to_dict(self, episode: Episode, library: str) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
-        return {
+        results = {
             **self.video_to_dict(episode),
             "contentType": 'episode',
             "library": library,
-            "duration": episode.duration,
-            "guid": episode.guid,
-            "originalTitle": episode.title,
-            "originallyAvailableAt": str(episode.originallyAvailableAt),
-            "rating": episode.rating,
-            "year": episode.year,
-            "seasonNumber": episode.seasonNumber,
-            "seasonEpisode": episode.seasonEpisode,
-            "seriesTitle": episode.grandparentTitle,
-            "media": [self.media_to_dict(media) for media in episode.media],
         }
+        attributes_to_fetch = {
+            "duration": lambda: episode.duration,
+            "guid": lambda: episode.guid,
+            "originalTitle": lambda: episode.title,
+            "originallyAvailableAt": lambda: str(episode.originallyAvailableAt),
+            "rating": lambda: episode.rating,
+            "year": lambda: episode.year,
+            "seasonNumber": lambda: episode.seasonNumber,
+            "seasonEpisode": lambda: episode.seasonEpisode,
+            "seriesTitle": lambda: episode.grandparentTitle,
+            "media": lambda: [self.media_to_dict(media) for media in episode.media],
+        }
+        with ThreadPoolExecutor(max_workers=len(attributes_to_fetch)) as executor:
+            future_to_attr = {executor.submit(self.fetch_attribute, func): attr for attr, func in attributes_to_fetch.items()}
+            for future in as_completed(future_to_attr):
+                attr = future_to_attr[future]
+                results[attr] = future.result()
+
+        return results
 
     def get_thumbnail_url(self, content_key):
         item = self.get_content(content_key)
