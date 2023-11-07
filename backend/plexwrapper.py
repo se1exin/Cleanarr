@@ -83,6 +83,12 @@ class PlexWrapper(object):
         if section.type not in ("movie", "show"):
             return {}
         dupes = []
+        duplicate=True
+        # undocumented environment variable purely for development purposes.
+        # instead of looking for duplicates, this will look for non-duplicates
+        # which can be useful when wanting to test the UI against a larger dataset
+        if os.getenv("CHAOS_NOT_DUPLICATE", "0") == "1":
+            duplicate=False
         to_dict_func = self.movie_to_dict
         if section.type == "episode":
             to_dict_func = self.episode_to_dict
@@ -101,9 +107,9 @@ class PlexWrapper(object):
             libtype = section.type
             if libtype == "show":
                 libtype = "episode"
-            results = section.search(duplicate=True, libtype=libtype, container_start=offset, limit=limit)
+            results = section.search(duplicate=duplicate, libtype=libtype, container_start=offset, limit=limit)
             for item in results:
-                if len(item.media) > 1:
+                if not duplicate or len(item.media) > 1:
                     future = executor.submit(to_dict_func, item, section.title)
                     futures.append(future)
 
