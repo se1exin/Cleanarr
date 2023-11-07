@@ -6,6 +6,7 @@
 # be invoked directly with ./backend/benchmark.py to simply run get_dupe_content()
 # and print traces to stdout (note: traces only available if DEBUG=1 set)
 
+import os
 import pytest
 import time
 from plexwrapper import PlexWrapper
@@ -14,8 +15,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_dupe_content():
-    PlexWrapper().get_dupe_content()
+def get_dupe_content(page):
+    return PlexWrapper().get_dupe_content(int(page))
 
 def test_get_dupe_content(benchmark):
     benchmark.pedantic(get_dupe_content, iterations=10, rounds=3)
@@ -23,5 +24,9 @@ def test_get_dupe_content(benchmark):
 
 # allow for direct invocation, without pytest
 if __name__ == "__main__":
-    get_dupe_content()
+    dupes = get_dupe_content(os.getenv("PAGE", "1"))
+    if dupes:
+        print(f"found {len(dupes)} dupes")
+    else:
+        print("no data found ...")
     print_top_traces(10)
