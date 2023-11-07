@@ -7,6 +7,7 @@ from plexapi.media import Media, MediaPart, MediaPartStream
 from plexapi.server import PlexServer
 from plexapi.video import Movie, Video, Episode
 
+from utils import trace_time
 from database import Database
 from logger import get_logger
 
@@ -39,22 +40,27 @@ class PlexWrapper(object):
         self.db = Database()
         logger.debug("Initialized DB!")
 
+        self.traces = {}
 
+    @trace_time
     def _get_sections(self):
         return [self.plex.library.section(title=library) for library in self.libraries]
 
+    @trace_time
     def get_deleted_sizes(self):
         sizes = {}
         for library_name in self.libraries:
             sizes[library_name] = self.db.get_deleted_size(library_name)
         return sizes
 
+    @trace_time
     def get_server_info(self):
         return {
             'name': self.plex.friendlyName,
             'url': self.baseurl + '/web/index.html'
         }
 
+    @trace_time
     def get_dupe_content(self, page=1):
         logger.debug("START")
         dupes = []
@@ -90,6 +96,7 @@ class PlexWrapper(object):
 
         return dupes
 
+    @trace_time
     def get_content_sample_files(self):
         content = []
 
@@ -111,9 +118,11 @@ class PlexWrapper(object):
                     content.append(_media)
         return content
 
+    @trace_time
     def get_content(self, media_id):
         return self.plex.fetchItem(media_id)
 
+    @trace_time
     def delete_media(self, library_name, content_key, media_id):
         content = self.get_content(content_key)
         deleted_size = self.db.get_deleted_size(library_name)
@@ -126,6 +135,7 @@ class PlexWrapper(object):
 
         self.db.set_deleted_size(library_name, deleted_size)
 
+    @trace_time
     def video_to_dict(self, video: Video) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Video
         ignored = self.db.get_ignored_item(video.key)
@@ -133,17 +143,17 @@ class PlexWrapper(object):
             "ignored": ignored is not None,
         }
         attributes_to_fetch = {
-            "addedAt": lambda: str(video.addedAt),
+            # "addedAt": lambda: str(video.addedAt),
             "key": lambda: video.key,
-            "lastViewedAt": lambda: str(video.lastViewedAt),
+            # "lastViewedAt": lambda: str(video.lastViewedAt),
             "librarySectionID": lambda: video.librarySectionID,
-            "summary": lambda: video.summary,
+            # "summary": lambda: video.summary,
             "thumbUrl": lambda: video.thumbUrl,
             "title": lambda: video.title,
-            "titleSort": lambda: video.titleSort,
+            # "titleSort": lambda: video.titleSort,
             "type": lambda: video.type,
-            "updatedAt": lambda: str(video.updatedAt),
-            "viewCount": lambda: str(video.viewCount),
+            # "updatedAt": lambda: str(video.updatedAt),
+            # "viewCount": lambda: str(video.viewCount),
             "url": lambda: self.baseurl + '/web/index.html#!/server/' + self.plex.machineIdentifier + '/details?key=' + urllib.parse.quote_plus(video.key)
         }
         with ThreadPoolExecutor(max_workers=len(attributes_to_fetch)) as executor:
@@ -161,18 +171,20 @@ class PlexWrapper(object):
         except Exception as e:
             logger.error(f"Error fetching attribute: {e}")
 
+    @trace_time
     def movie_to_dict(self, movie: Movie, library: str) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
         attributes_to_fetch = {
             "duration": lambda: movie.duration,
             "guid": lambda: movie.guid,
-            "originalTitle": lambda: movie.originalTitle,
-            "originallyAvailableAt": lambda: str(movie.originallyAvailableAt),
-            "rating": lambda: movie.rating,
-            "ratingImage": lambda: movie.ratingImage,
-            "studio": lambda: movie.studio,
-            "tagline": lambda: movie.tagline,
-            "userRating": lambda: movie.userRating,
+            "originalTitle": lambda: movie.title,
+            # "originalTitle": lambda: movie.originalTitle,
+            # "originallyAvailableAt": lambda: str(movie.originallyAvailableAt),
+            # "rating": lambda: movie.rating,
+            # "ratingImage": lambda: movie.ratingImage,
+            # "studio": lambda: movie.studio,
+            # "tagline": lambda: movie.tagline,
+            # "userRating": lambda: movie.userRating,
             "year": lambda: movie.year,
             "media": lambda: [self.media_to_dict(media) for media in movie.media],
         }
@@ -189,6 +201,7 @@ class PlexWrapper(object):
 
         return results
 
+    @trace_time
     def episode_to_dict(self, episode: Episode, library: str) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/video.html#plexapi.video.Movie
         results = {
@@ -200,8 +213,8 @@ class PlexWrapper(object):
             "duration": lambda: episode.duration,
             "guid": lambda: episode.guid,
             "originalTitle": lambda: episode.title,
-            "originallyAvailableAt": lambda: str(episode.originallyAvailableAt),
-            "rating": lambda: episode.rating,
+            # "originallyAvailableAt": lambda: str(episode.originallyAvailableAt),
+            # "rating": lambda: episode.rating,
             "year": lambda: episode.year,
             "seasonNumber": lambda: episode.seasonNumber,
             "seasonEpisode": lambda: episode.seasonEpisode,
@@ -216,6 +229,7 @@ class PlexWrapper(object):
 
         return results
 
+    @trace_time
     def get_thumbnail_url(self, content_key):
         item = self.get_content(content_key)
         if item is not None:
@@ -224,6 +238,7 @@ class PlexWrapper(object):
             return "";
 
     @classmethod
+    @trace_time
     def media_to_dict(cls, media: Media) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/media.html#plexapi.media.Media
         return {
@@ -250,37 +265,49 @@ class PlexWrapper(object):
         }
 
     @classmethod
+    @trace_time
     def media_part_to_dict(cls, media_part: MediaPart) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/media.html#plexapi.media.MediaPart
-        return {
-            "id": media_part.id,
-            # 'media_id': media_part.media.id,
-            # 'initpath': media_part.initpath,
-            "container": media_part.container,
-            "duration": media_part.duration,
-            "file": media_part.file,
-            "indexes": media_part.indexes,
-            "key": media_part.key,
-            "size": media_part.size,
-            "exists": media_part.exists,
-            "accessible": media_part.accessible,
-            "streams": [
+        results = {}
+        attributes_to_fetch = {
+            "id": lambda: media_part.id,
+            "container": lambda: media_part.container,
+            "duration": lambda: media_part.duration,
+            "file": lambda: media_part.file,
+            "indexes": lambda: media_part.indexes,
+            "key": lambda: media_part.key,
+            "size": lambda: media_part.size,
+            "exists": lambda: media_part.exists,
+            "accessible": lambda: media_part.accessible,
+            "streams": lambda: [
                 cls.media_part_stream_to_dict(media_part_stream)
                 for media_part_stream in media_part.videoStreams()
             ],
         }
+        with ThreadPoolExecutor(max_workers=len(attributes_to_fetch)) as executor:
+            future_to_attr = {executor.submit(cls.fetch_attribute, func): attr for attr, func in attributes_to_fetch.items()}
+            for future in as_completed(future_to_attr):
+                attr = future_to_attr[future]
+                results[attr] = future.result()
+        return results
 
     @classmethod
+    @trace_time
     def media_part_stream_to_dict(cls, media_part_stream: MediaPartStream) -> dict:
         # https://python-plexapi.readthedocs.io/en/latest/modules/media.html#plexapi.media.MediaPartStream
-        return {
-            "id": media_part_stream.id,
-            # 'media_id': media_part.media.id,
-            # 'initpath': media_part.initpath,
-            "codec": media_part_stream.codec,
-            "codecID": media_part_stream.codecID,
-            "language": media_part_stream.language,
-            "languageCode": media_part_stream.languageCode,
-            "selected": media_part_stream.selected,
-            "type": media_part_stream.type,
+        results = {}
+        attributes_to_fetch = {
+            "id": lambda: media_part_stream.id,
+            "codec": lambda: media_part_stream.codec,
+            "codecID": lambda: media_part_stream.codecID,
+            "language": lambda: media_part_stream.language,
+            "languageCode": lambda: media_part_stream.languageCode,
+            "selected": lambda: media_part_stream.selected,
+            "type": lambda: media_part_stream.type,
         }
+        with ThreadPoolExecutor(max_workers=len(attributes_to_fetch)) as executor:
+            future_to_attr = {executor.submit(cls.fetch_attribute, func): attr for attr, func in attributes_to_fetch.items()}
+            for future in as_completed(future_to_attr):
+                attr = future_to_attr[future]
+                results[attr] = future.result()
+        return results
