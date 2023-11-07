@@ -13,25 +13,32 @@ from logger import get_logger
 
 logger = get_logger(__name__)
 
+class HostNameIgnoringAdapter(requests.adapters.HTTPAdapter):
+    def init_poolmanager(self, connections, maxsize, block=..., **pool_kwargs):
+        self.poolmanager = PoolManager(num_pools=connections,
+                                       maxsize=maxsize,
+                                       block=block,
+                                       assert_hostname=False)
+
 class PlexWrapper(object):
     def __init__(self):
         self.baseurl = os.environ.get("PLEX_BASE_URL")
         token = os.environ.get("PLEX_TOKEN")
         self.page_size = int(os.environ.get("PAGE_SIZE", 50))
-        verify_ssl = os.environ.get("BYPASS_SSL_VERIFY", "0") != "1"
         self.libraries = [
             x.strip()
             for x in os.environ.get("LIBRARY_NAMES", "Movies").split(";")
             if x.strip() != ""
         ]
-        timeout = int(os.environ.get("PLEX_TIMEOUT",60*60)) # added line
+        timeout = int(os.environ.get("PLEX_TIMEOUT",60*60))
         
         logger.debug("PlexWrapper Init")
         logger.debug("PLEX_BASE_URL %s", self.baseurl)
         logger.debug("LIBRARY_NAMES %s", self.libraries)
 
         session = requests.Session()
-        session.verify = verify_ssl
+        if os.environ.get("BYPASS_SSL_VERIFY", "0") == "1":
+            session.mount("https://", HostNameIgnoringAdapter())
         logger.debug("Connecting to Plex...")
         self.plex = PlexServer(self.baseurl, token, session=session, timeout=timeout)
         logger.debug("Connected to Plex!")
