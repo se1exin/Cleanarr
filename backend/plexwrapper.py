@@ -66,36 +66,53 @@ class PlexWrapper(object):
         dupes = []
         with ThreadPoolExecutor() as executor:
             futures = []
+            logger.debug(f"GET DUPES FOR: {[(x.title, x.type) for x in self._get_sections()]}")
             for section in self._get_sections():
-                logger.debug("SECTION: %s", section.title)
-                if section.type == "movie":
-                    logger.debug("Section type is MOVIE")
-                    # Recursively search movies
-                    offset = (page - 1) * self.page_size
-                    limit = offset + self.page_size
-                    logger.debug("Get results from offset %s to limit %s", offset, limit)
-                    results = section.search(duplicate=True, libtype='movie', container_start=offset, limit=limit)
-                    for movie in results:
-                        if len(movie.media) > 1:
-                            future = executor.submit(self.movie_to_dict, movie, section.title)
-                            futures.append(future)
-                elif section.type == "show":
-                    logger.debug("Section type is SHOW")
-                    # Recursively search TV
-                    offset = (page - 1) * self.page_size
-                    limit = offset + self.page_size
-                    logger.debug("Get results from offset %s to limit %s", offset, limit)
-                    results = section.search(duplicate=True, libtype='episode', container_start=offset, limit=limit)
-                    for episode in results:
-                        if len(episode.media) > 1:
-                            future = executor.submit(self.episode_to_dict, episode, section.title)
-                            futures.append(future)
+                future = executor.submit(self.get_dupe_content_for_section, page, section)
+                futures.append(future)
+
+            for future in as_completed(futures):
+                results = future.result()
+                if results:
+                    dupes = dupes + results
+
+        return dupes
+
+    @trace_time
+    def get_dupe_content_for_section(self, page, section):
+        if section.type not in ("movie", "show"):
+            return {}
+        dupes = []
+        to_dict_func = self.movie_to_dict
+        if section.type == "episode":
+            to_dict_func = self.episode_to_dict
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            logger.debug("SECTION: %s/%s", section.title, section.type)
+            offset = (page - 1) * self.page_size
+            limit = offset + self.page_size
+            logger.debug(
+                "Get results for %s/%s from offset %s to limit %s",
+                section.title,
+                section.type,
+                offset,
+                limit,
+            )
+            libtype = section.type
+            if libtype == "show":
+                libtype = "episode"
+            results = section.search(duplicate=True, libtype=libtype, container_start=offset, limit=limit)
+            for item in results:
+                if len(item.media) > 1:
+                    future = executor.submit(to_dict_func, item, section.title)
+                    futures.append(future)
 
             for future in as_completed(futures):
                 dupes.append(future.result())
 
         return dupes
 
+    # TODO: refactor and multithread
     @trace_time
     def get_content_sample_files(self):
         content = []
@@ -235,7 +252,7 @@ class PlexWrapper(object):
         if item is not None:
             return item.thumbUrl
         else:
-            return "";
+            return ""
 
     @classmethod
     @trace_time
