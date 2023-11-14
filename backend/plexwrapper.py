@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+from urllib3 import PoolManager
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
