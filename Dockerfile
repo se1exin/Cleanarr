@@ -23,3 +23,5 @@ COPY --from=build-stage /frontend/build/static/css /app/static/css
 COPY --from=build-stage /frontend/build/static/js /app/static/js
 RUN mkdir -p $CONFIG_DIR
 
+# copied from here: https://github.com/se1exin/Cleanarr/issues/135#issuecomment-2091709103
+RUN echo "buffer-size=32768" >> /app/uwsgi.ini
