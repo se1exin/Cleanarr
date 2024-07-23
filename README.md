@@ -28,6 +28,7 @@ You will need to set the correct parameters for your setup:
 | `-e PAGE_SIZE=50` | (**optional**) To avoid plex timeouts, results are loaded in pages (or chunks). If you recieve Plex Timeout errors, try setting this parameter to a lower value. |
 | `-e DEBUG=0` | (**optional**) To enable debug logging set `DEBUG` to `1` |
 | `-e PLEX_TIMEOUT=7200` | (**optional**) modify the timeout for wrapper (Error : Failed to load content!) |
+| `-e DATABASE_URL=postgresql://user:pass@database:5432/cleanarr` | (**optional**) To use a PostgreSQL database instead of the default TinyDB database. |
 
 #### Example running directly with docker (with make)
 

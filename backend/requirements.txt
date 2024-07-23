@@ -17,3 +17,5 @@ websocket-client==0.57.0
 Werkzeug==3.0.1
 python-dotenv==1.0.0
 pytest-benchmark==4.0.0
+sqlalchemy==2.0.30
+psycopg2==2.9.9
