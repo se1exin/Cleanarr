@@ -33,16 +33,36 @@ class PlexWrapper(object):
         ]
         timeout = int(os.environ.get("PLEX_TIMEOUT",60*60))
         
-        logger.debug("PlexWrapper Init")
-        logger.debug("PLEX_BASE_URL %s", self.baseurl)
-        logger.debug("LIBRARY_NAMES %s", self.libraries)
+        logger.info("PlexWrapper Init")
+        logger.info("PLEX_BASE_URL %s", self.baseurl)
+        logger.info("LIBRARY_NAMES %s", self.libraries)
 
         session = requests.Session()
         if os.environ.get("BYPASS_SSL_VERIFY", "0") == "1":
-            session.mount("https://", HostNameIgnoringAdapter())
+            session.verify = False
+            # Suppress SSL warnings
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            logger.info("SSL verification disabled")
+        
         logger.debug("Connecting to Plex...")
-        self.plex = PlexServer(self.baseurl, token, session=session, timeout=timeout)
-        logger.debug("Connected to Plex!")
+        logger.info("Using session with verify=%s", session.verify)
+        logger.info("Session headers: %s", dict(session.headers))
+        
+        try:
+            # Try connecting with explicit parameters
+            logger.info("Attempting PlexServer connection with baseurl=%s, token=%s, timeout=%s", 
+                        self.baseurl, token[:10] + "..." if token else "None", timeout)
+            
+            self.plex = PlexServer(self.baseurl, token, session=session, timeout=timeout)
+            logger.debug("Connected to Plex!")
+            logger.debug("Plex server name: %s", self.plex.friendlyName)
+            
+        except Exception as e:
+            logger.error("Failed to connect to Plex: %s", str(e))
+            logger.error("Exception type: %s", type(e).__name__)
+            logger.error("Exception args: %s", e.args)
+            raise
 
         logger.debug("Initializing DB...")
         self.db = Database()
@@ -69,27 +89,49 @@ class PlexWrapper(object):
         }
 
     @trace_time
-    def get_dupe_content(self, page=1):
-        logger.debug("START")
+    def get_dupe_content(self, page=None):
+        logger.info("=== START get_dupe_content ===")
+        if page is None:
+            logger.info("No page specified - fetching all duplicates")
+        else:
+            logger.info(f"Page requested: {page} (ignored - fetching all)")
+        
         dupes = []
         with ThreadPoolExecutor() as executor:
             futures = []
-            logger.debug(f"GET DUPES FOR: {[(x.title, x.type) for x in self._get_sections()]}")
-            for section in self._get_sections():
-                future = executor.submit(self.get_dupe_content_for_section, page, section)
+            
+            # Get sections first
+            logger.info("Getting library sections...")
+            sections = self._get_sections()
+            logger.info(f"Found {len(sections)} sections: {[(x.title, x.type) for x in sections]}")
+            
+            for section in sections:
+                logger.info(f"Submitting section '{section.title}' ({section.type}) for processing...")
+                future = executor.submit(self.get_dupe_content_for_section, None, section)
                 futures.append(future)
 
+            logger.info(f"Waiting for {len(futures)} section processing tasks to complete...")
             for future in as_completed(futures):
-                results = future.result()
-                if results:
-                    dupes = dupes + results
+                try:
+                    results = future.result()
+                    logger.info(f"Section processing completed, got {len(results) if results else 0} results")
+                    if results:
+                        dupes = dupes + results
+                        logger.info(f"Total dupes so far: {len(dupes)}")
+                except Exception as e:
+                    logger.error(f"Error processing section: {str(e)}")
 
+        logger.info(f"=== END get_dupe_content, returning {len(dupes)} total results ===")
         return dupes
 
     @trace_time
     def get_dupe_content_for_section(self, page, section):
+        logger.info(f"=== Processing section: {section.title} ({section.type}) ===")
+        
         if section.type not in ("movie", "show"):
+            logger.info(f"Skipping section {section.title} - type {section.type} not supported")
             return {}
+            
         dupes = []
         duplicate=True
         # undocumented environment variable purely for development purposes.
@@ -97,29 +139,61 @@ class PlexWrapper(object):
         # which can be useful when wanting to test the UI against a larger dataset
         if os.getenv("CHAOS_NOT_DUPLICATE", "0") == "1":
             duplicate=False
+            logger.info("CHAOS_NOT_DUPLICATE=1, looking for NON-duplicates")
+        else:
+            logger.info("Looking for duplicates")
+            
         to_dict_func = self.movie_to_dict
         if section.type == "episode":
             to_dict_func = self.episode_to_dict
+            logger.info("Using episode_to_dict function")
+        else:
+            logger.info("Using movie_to_dict function")
+            
         with ThreadPoolExecutor() as executor:
             futures = []
-            logger.debug("SECTION: %s/%s", section.title, section.type)
-            offset = (page - 1) * self.page_size
-            limit = offset + self.page_size
-            logger.debug(
-                "Get results for %s/%s from offset %s to limit %s",
-                section.title,
-                section.type,
-                offset,
-                limit,
-            )
-            libtype = section.type
-            if libtype == "show":
-                libtype = "episode"
-            results = section.search(duplicate=duplicate, libtype=libtype, container_start=offset, limit=limit)
-            for item in results:
+            logger.info(f"Processing section: {section.title}/{section.type}")
+            
+            if page is None:
+                # No pagination - get all results
+                logger.info(f"Getting all results for {section.title}/{section.type} (no pagination)")
+                libtype = section.type
+                if libtype == "show":
+                    libtype = "episode"
+                    logger.info(f"Show section detected, using libtype='episode' for search")
+                    
+                logger.info(f"Searching for all content with duplicate={duplicate}, libtype={libtype}")
+                results = section.search(duplicate=duplicate, libtype=libtype)
+                logger.info(f"Search returned {len(results)} items")
+            else:
+                # Pagination logic (kept for backward compatibility)
+                offset = (page - 1) * self.page_size
+                limit = offset + self.page_size
+                logger.info(
+                    "Get results for %s/%s from offset %s to limit %s (page_size=%s)",
+                    section.title,
+                    section.type,
+                    offset,
+                    limit,
+                    self.page_size
+                )
+                libtype = section.type
+                if libtype == "show":
+                    libtype = "episode"
+                    logger.info(f"Show section detected, using libtype='episode' for search")
+                    
+                logger.info(f"Searching for content with duplicate={duplicate}, libtype={libtype}, offset={offset}, limit={limit}")
+                results = section.search(duplicate=duplicate, libtype=libtype, container_start=offset, limit=limit)
+                logger.info(f"Search returned {len(results)} items")
+            
+            for i, item in enumerate(results):
+                logger.info(f"Item {i+1}: {item.title} (type: {item.TYPE}) - Media count: {len(item.media)}")
                 if not duplicate or len(item.media) > 1:
+                    logger.info(f"Processing item '{item.title}' - qualifies as duplicate")
                     future = executor.submit(to_dict_func, item, section.title)
                     futures.append(future)
+                else:
+                    logger.info(f"Skipping item '{item.title}' - doesn't qualify as duplicate (media count: {len(item.media)})")
 
             for future in as_completed(futures):
                 dupes.append(future.result())
@@ -155,16 +229,54 @@ class PlexWrapper(object):
 
     @trace_time
     def delete_media(self, library_name, content_key, media_id):
-        content = self.get_content(content_key)
-        deleted_size = self.db.get_deleted_size(library_name)
-
-        for media in content.media:
-            if media.id == media_id:
-                for part in media.parts:
-                    deleted_size += part.size
-                media.delete()
-
-        self.db.set_deleted_size(library_name, deleted_size)
+        try:
+            logger.debug(f"Starting delete operation for media_id: {media_id}, content_key: {content_key}")
+            
+            # Get the content item first
+            content = self.get_content(content_key)
+            if not content:
+                logger.error(f"Content not found for key: {content_key}")
+                raise Exception(f"Content not found for key: {content_key}")
+            
+            # Find the specific media to delete
+            target_media = None
+            total_size_to_delete = 0
+            
+            for media in content.media:
+                if media.id == media_id:
+                    target_media = media
+                    # Calculate total size to delete
+                    for part in media.parts:
+                        if part.exists and part.accessible:
+                            total_size_to_delete += part.size
+                    break
+            
+            if not target_media:
+                logger.error(f"Media with ID {media_id} not found in content")
+                raise Exception(f"Media with ID {media_id} not found")
+            
+            # Delete the media
+            logger.debug(f"Deleting media {media_id} with size {total_size_to_delete} bytes")
+            target_media.delete()
+            
+            # Update the database with the deleted size
+            try:
+                current_deleted_size = self.db.get_deleted_size(library_name)
+                new_total = current_deleted_size + total_size_to_delete
+                self.db.set_deleted_size(library_name, new_total)
+                logger.debug(f"Updated deleted size for {library_name}: {current_deleted_size} -> {new_total}")
+            except Exception as db_error:
+                logger.error(f"Failed to update database: {db_error}")
+                # Don't fail the delete operation if database update fails
+                # The media was already deleted from Plex
+            
+            logger.info(f"Successfully deleted media {media_id} from {library_name}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error deleting media {media_id}: {str(e)}")
+            # Re-raise the exception to be handled by the caller
+            raise
 
     @trace_time
     def video_to_dict(self, video: Video) -> dict:

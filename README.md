@@ -4,8 +4,32 @@ A simple UI to help find and delete duplicate and sample files from your Plex se
 
 > Note: At this time only Plex Content Libraries (TV/Movies) are supported.
 
+## Recent Fixes (v1.1.1)
+
+This version includes critical fixes for the delete functionality that was causing 500s and 502s:
+
+### Backend Fixes
+
+- **Fixed Delete Operation**: Resolved race conditions and database conflicts during media deletion
+- **Improved Error Handling**: Better error handling and logging throughout the application
+- **Database Thread Safety**: Added proper locking to prevent concurrent access issues
+- **Updated Dependencies**: All Python packages updated to latest stable versions
+
+### Frontend Fixes
+
+- **Better Error Handling**: Improved API error handling and user feedback
+- **Updated Dependencies**: All Node.js packages updated to latest stable versions
+- **Enhanced UI**: Better error display and operation status feedback
+
+### Infrastructure Improvements
+
+- **Modern Docker Setup**: Updated to use Python 3.11 and Node.js 18
+- **Nginx + uWSGI**: Replaced old uwsgi-nginx-flask with modern nginx + uWSGI setup
+- **Health Checks**: Added health check endpoints for better monitoring
+
 ## Plex Setup
-You need to check `Settings | Library | Allow media deletion` within your plex server’s settings
+
+You need to check `Settings | Library | Allow media deletion` within your plex server's settings
 
 You will need a Plex Token: [How to find your Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
@@ -17,17 +41,17 @@ This project is available as a docker container on [Docker Hub](https://hub.dock
 
 You will need to set the correct parameters for your setup:
 
-| Parameter | Function |
-| ----- | --- |
-| `-v /some/path/on/your/computer:/config` | (**required**) Volume mount for config directory |
-| `-e PLEX_BASE_URL="plex_address"` | (**required**) Plex Server Address (e.g. http://192.169.1.100:32400) |
-| `-e PLEX_TOKEN="somerandomstring"` | (**required**) A valid Plex token for your Plex Server ([How to find your Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)) |
-| `-e LIBRARY_NAMES="Movies"`| (**optional**) Name(s) of your Plex Libraries to search. Separate multiple library names with ";" character. E.g. `"Movies 1;Movies 2"`. Default value is **"Movies"** |
-| `-e BYPASS_SSL_VERIFY=1` | (**optional**) Disable SSL certificate verification. Use this if your Plex Server has "Secure Connections: Required" and you are having issues connecting to it. (Thanks [@booksarestillbetter - #2](https://github.com/se1exin/cleanarr/issues/2)) |
-| `-p 5000:80` | (**required**) Expose the UI via the selected port (in this case `5000`). Change `5000` to the port of your choosing, but don't change the number `80`. |
-| `-e PAGE_SIZE=50` | (**optional**) To avoid plex timeouts, results are loaded in pages (or chunks). If you recieve Plex Timeout errors, try setting this parameter to a lower value. |
-| `-e DEBUG=0` | (**optional**) To enable debug logging set `DEBUG` to `1` |
-| `-e PLEX_TIMEOUT=7200` | (**optional**) modify the timeout for wrapper (Error : Failed to load content!) |
+| Parameter                                | Function                                                                                                                                                                                                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-v /some/path/on/your/computer:/config` | (**required**) Volume mount for config directory                                                                                                                                                                                                    |
+| `-e PLEX_BASE_URL="plex_address"`        | (**required**) Plex Server Address (e.g. http://192.169.1.100:32400)                                                                                                                                                                                |
+| `-e PLEX_TOKEN="somerandomstring"`       | (**required**) A valid Plex token for your Plex Server ([How to find your Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/))                                                                    |
+| `-e LIBRARY_NAMES="Movies"`              | (**optional**) Name(s) of your Plex Libraries to search. Separate multiple library names with ";" character. E.g. `"Movies 1;Movies 2"`. Default value is **"Movies"**                                                                              |
+| `-e BYPASS_SSL_VERIFY=1`                 | (**optional**) Disable SSL certificate verification. Use this if your Plex Server has "Secure Connections: Required" and you are having issues connecting to it. (Thanks [@booksarestillbetter - #2](https://github.com/se1exin/cleanarr/issues/2)) |
+| `-p 5000:80`                             | (**required**) Expose the UI via the selected port (in this case `5000`). Change `5000` to the port of your choosing, but don't change the number `80`.                                                                                             |
+| `-e PAGE_SIZE=50`                        | (**optional**) To avoid plex timeouts, results are loaded in pages (or chunks). If you recieve Plex Timeout errors, try setting this parameter to a lower value.                                                                                    |
+| `-e DEBUG=0`                             | (**optional**) To enable debug logging set `DEBUG` to `1`                                                                                                                                                                                           |
+| `-e PLEX_TIMEOUT=7200`                   | (**optional**) modify the timeout for wrapper (Error : Failed to load content!)                                                                                                                                                                     |
 
 #### Example running directly with docker (with make)
 
@@ -46,6 +70,7 @@ CONFIG_MOUNT=/tmp/config make run
 ```
 
 #### Example running directly with docker (manually)
+
 ```shell
 # you can build and run manually
 docker build -t=selexin/cleanarr:latest .
@@ -56,10 +81,11 @@ docker run \
 	-p 5000:80 \
   -v /some/path/on/your/computer:/config \
 	selexin/cleanarr:latest
-	
+
 ```
 
 #### Example using Docker Compose
+
 (Thanks @JesseWebDotCom - #8)
 
 Note that environment variables should **not** be quoted when using docker-compose.yml format
@@ -85,82 +111,63 @@ services:
     restart: unless-stopped
 ```
 
-
 You can then access the UI in your browser at [http://localhost:5000/](http://localhost:5000/).
 
-## Run from Source / Setup Development Environment
+## Building from Source
 
-To run from source you need to run two parts - the Python Backend and React Frontend.
+### Prerequisites
 
-First clone down this repo:
-```
-git clone https://github.com/se1exin/cleanarr
-```
+- Python 3.11+
+- Node.js 18+
+- Docker
 
-## Backend
+### Backend Setup
 
-Requirements: `python3`
-
-The backend is just a thin wrapper around the Python Plex API using `Flask` to serve requests. I recommend using a `virtualenv` to run.
-
-You should change to the `backend` folder to get things running:
-```
+```bash
 cd backend
-```
-
-Setup the python environment and dependencies:
-```
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Run the Backend:
-```
-PLEX_BASE_URL="plex_address" PLEX_TOKEN="somerandomstring" LIBRARY_NAMES="Movies" PLEX_TIMEOUT="7200" FLASK_APP=main python -m flask run
-```
+### Frontend Setup
 
-The backend will start and run from port `5000` on `localhost` (e.g. [http:localhost:5000](http:localhost:5000)).
-
-If you are running on a remote server :
-```
-PLEX_BASE_URL="http://plex_address:32400" PLEX_TOKEN="somerandomstring" LIBRARY_NAMES="Movies" FLASK_APP=main python -m flask run --host=IP.remote.server
-```
-See [Flask's Docs for more run options (such as chaning the port)](https://flask.palletsprojects.com/en/1.1.x/cli/).
-
-## Frontend
-
-Requirements: `node`, `yarn`.
-
-You should change to the `frontend` folder to get things running:
-```
+```bash
 cd frontend
+npm install
+npm run build
 ```
 
-Setup the node environment and dependencies:
-```
-yarn install
-```
+### Docker Build
 
-Run the Frontend development server:
-
->Note: change `REACT_APP_BACKEND_URL` to match where your backend is running at - **make sure to include the trailing slash!**
-```
-REACT_APP_BACKEND_URL="http://localhost:5000/" yarn start
+```bash
+docker build -t cleanarr:latest .
 ```
 
-The frontend will now be available in your browser at [http:localhost:3000](http:localhost:3000).
+## Troubleshooting
 
+### Delete Operations Failing
 
-## Screenshots
+If you're still experiencing issues with delete operations:
 
-![Demo of deleting duplicate movies](screenshots/demo.gif)
+1. **Check Logs**: Enable debug logging by setting `DEBUG=1`
+2. **Verify Permissions**: Ensure Plex has permission to delete files
+3. **Check Disk Space**: Ensure there's sufficient disk space for database operations
+4. **Database Issues**: If database corruption is suspected, delete the `db.json` file and restart
 
+### Performance Issues
+
+- Reduce `PAGE_SIZE` if experiencing timeouts
+- Increase `PLEX_TIMEOUT` for large libraries
+- Monitor memory usage during bulk operations
 
 ## Credits
+
 Thanks to the following projects:
+
 - [pkkid/python-plexapi](https://github.com/pkkid/python-plexapi)
 - [tiangolo/uwsgi-nginx-flask-docker](https://github.com/tiangolo/uwsgi-nginx-flask-docker)
 
 ## License
+
 MIT - see [LICENSE.md](https://github.com/se1exin/cleanarr/blob/master/LICENSE.md)

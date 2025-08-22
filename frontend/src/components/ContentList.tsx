@@ -1,5 +1,5 @@
 import {Alert, majorScale, Pane, Paragraph, Spinner} from "evergreen-ui";
-import React, {FunctionComponent} from 'react';
+import React, {FunctionComponent, ReactElement} from 'react';
 import {Content} from "../types";
 
 type DupeMovieListProps = {
@@ -8,7 +8,7 @@ type DupeMovieListProps = {
   loadingError: Error | null,
   listingType: string,
   content: Content[],
-  renderContentItem: (movie: Content, key: number) => JSX.Element
+  renderContentItem: (movie: Content, key: number) => ReactElement
 }
 
 export const ContentList:FunctionComponent<DupeMovieListProps> = (props) => {
