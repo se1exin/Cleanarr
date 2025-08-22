@@ -6,7 +6,7 @@ import {
   majorScale,
   Pane,
   Pill,
-  SegmentedControl,
+  RadioGroup,
   Spinner, Switch
 } from "evergreen-ui";
 import React, {FunctionComponent, useState} from "react";
@@ -66,11 +66,9 @@ export const ContentTopBar:FunctionComponent<DupeMovieTopBarProps> = (props) => 
             icon="refresh"
             onClick={onRefresh}
           />
-          <SegmentedControl
+          <RadioGroup
             name="switch"
             marginX={majorScale(2)}
-            width={160}
-            height={32}
             options={listingOptions}
             value={listingType}
             onChange={value => onListingTypeChange(value.toString())}

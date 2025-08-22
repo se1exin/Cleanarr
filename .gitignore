@@ -2,3 +2,5 @@
 .idea
 venv
 backend/db.json
+build.sh
+version.txt
